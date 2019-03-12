@@ -2,7 +2,7 @@ import ROOT, os
 from ROOT import TFile
 import subSample
 import argparse
-from eventSelectionSkimmer import isGoodEventAN17_094, isGoodEventEwkino, isGoodEventJana
+from eventSelectionSkimmer import isGoodEventAN17_094, isGoodEventEwkino
 from helpers import makeDirIfNeeded, progress
 
 argParser = argparse.ArgumentParser(description = "Argument parser")
@@ -14,24 +14,21 @@ argParser.add_argument('--isTest',      action='store',         default=False)
 
 args = argParser.parse_args()
 
-print '1'
-
 subsample = subSample.subSample(args.path, int(args.subDir))
 Chain = subsample.initChain(int(args.subJob))
 
-print '3'
+#Create output file
+makeDirIfNeeded('/user/lwezenbe/public/ntuples/tmp_'+subsample.group)
+output_file = TFile('/user/lwezenbe/public/ntuples/tmp_'+subsample.group+'/'+subsample.group+'_'+ subsample.name+'_' +str(args.subDir)+'_'+str(args.subJob)+'.root', 'recreate')
+output_file.cd()
 
 #Get hcounters
 if subsample.group != 'SingleMuon':      hCounter = subsample.gethCounter()
 if 'TChi' in subsample.group:            hCounterSUSY = subsample.gethCounterSUSY()
 
-print'4'
-
 #initialize new tree
 print Chain.GetEntries()
 output_tree = Chain.CloneTree(0)
-
-print '5' 
 
 #Fill new tree
 for entry in xrange(Chain.GetEntries()):
@@ -42,34 +39,17 @@ for entry in xrange(Chain.GetEntries()):
         if not isGoodEventEwkino(Chain):        continue
     elif args.analysis == 'tauAN':
         if not isGoodEventAN17_094(Chain):      continue
-    elif args.analysis == 'Jana':
-        if not isGoodEventJana(Chain):          continue
     
     output_tree.Fill()
 
-if not args.isTest:
-    #Create output file
-    makeDirIfNeeded('/user/lwezenbe/public/trilep/tmp_'+subsample.group)
-    output_file = TFile('/user/lwezenbe/public/trilep/tmp_'+subsample.group+'/'+subsample.group+'_'+ subsample.name+'_' +str(args.subDir)+'_'+str(args.subJob)+'.root', 'recreate')
+#if not args.isTest:
 
-    #Write
-    output_tree.Write()
-    if subsample.group != 'SingleMuon':      hCounter.Write()
-    if 'TChi' in subsample.group:            hCounterSUSY.Write()
+output_file.cd()
+#Write
+output_tree.Write()
+if subsample.group != 'SingleMuon':      hCounter.Write()
+if 'TChi' in subsample.group:            hCounterSUSY.Write()
 
-    #Close the file
-    output_file.Close()
+#Close the file
+output_file.Close()
 
-
-
-            
-#MAIN BODY
-
-#files_to_skim = subSample.createSampleList(args.sampleList)
-#for group, f in samples_to_skim:
-#    number_of_subdir = subprocess.check_output("/bin/ls -lA " + f + "/* | egrep -c '^-|^d'", shell=True, stderr=subprocess.STDOUT)
-#    for subdir in xrange(number_of_subdir):
-#        subsample = subSample(group, f, subdir)
-#        nJobs = subsample.totalJobs
-#        for job in nJobs:
-#            launch 

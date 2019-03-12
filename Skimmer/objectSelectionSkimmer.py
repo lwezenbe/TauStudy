@@ -32,13 +32,13 @@ def isGoodTauEwkino(Chain, index):
     elif abs(Chain._lEta[index]) > 2.3:         return False
     elif not Chain._decayModeFinding[index]:    return False
     elif not Chain._lPOGVeto[index]:            return False
-    elif not Chain._tauMuonVetoLoose[index]:    return False
-    elif not Chain._tauEleVetoLoose[index]:     return False
+#    elif not Chain._tauMuonVetoLoose[index]:    return False
+#    elif not Chain._tauEleVetoLoose[index]:     return False
     return True
 
-def isGoodLepJana(Chain, index):
-    if not Chain._lPOGMedium[index]:            return False
-    return True
+#def isGoodLepJana(Chain, index):
+#    if not Chain._lPOGMedium[index]:            return False
+#    return True
 
 def isCleanJet(Chain, index):
 

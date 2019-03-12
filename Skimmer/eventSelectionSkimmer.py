@@ -35,19 +35,9 @@ def isGoodEventEwkino(Chain):
         if Chain._lFlavor[l] == 2: nTau += 1
 
     #Keep only events with exactly 3 good leptons
-    if len(lIndex) != 3:                                                        return False
+    if len(lIndex) < 3:                                                        return False
 
-    #Keep only events with 1 or 2 taus
-    if nTau == 0 or nTau == 3:                                                  return False
-
-    #Perform pt cuts
-    lPt = []
-    for l in lIndex:
-        lPt.append(Chain._lPt[l])
-
-    lPtSorted = sorted(lPt)
-
-    if lPtSorted[0] < 10 or lPtSorted[1] < 15 or lPtSorted[2] < 25:             return False
+    if nTau < 1:                                                               return False
 
     #Missing energy cut
     if Chain._met < 50.:                                                        return False
@@ -62,18 +52,18 @@ def isGoodEventEwkino(Chain):
 
     return True
 
-def isGoodEventJana(Chain):
-    nTau = 0
-    lIndex = []
-    for l in range(ord(Chain._nL)):
-        if objSel.isGoodLepJana(Chain, l):
-            lIndex.append(l)
-            if Chain._lFlavor[l] == 2:
-                nTau += 1.
-    
-    if len(lIndex) < 3:
-        return False
-    elif nTau < 1:
-        return False
-    else:
-        return True
+#def isGoodEventJana(Chain):
+#    nTau = 0
+#    lIndex = []
+#    for l in range(ord(Chain._nL)):
+#        if objSel.isGoodLepJana(Chain, l):
+#            lIndex.append(l)
+#            if Chain._lFlavor[l] == 2:
+#                nTau += 1.
+#    
+#    if len(lIndex) < 3:
+#        return False
+#    elif nTau < 1:
+#        return False
+#    else:
+#        return True
