@@ -23,7 +23,7 @@ def launchCream02(command, logfile, checkQueue=False, name=None):
                  '-q localgrid@cream02',
                  '-o ' + logfile,
                  '-e ' + logfile,
-                 '-l walltime=15:00:00']
+                 '-l walltime=5:00:00']
   if name:
     qsubOptions.append('-N ' + name)
   try:    out = system('qsub ' + ' '.join(qsubOptions) + ' /user/lwezenbe/private/PhD/Code/TauStudy/scripts/runOnCream02.sh')

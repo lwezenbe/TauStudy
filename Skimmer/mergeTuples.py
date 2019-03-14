@@ -14,5 +14,5 @@ print args.f
 split_f = args.f.rsplit('/', 1)
 subsplit_f = split_f[1].split('_', 1)
 os.system('hadd -f '+args.Output+'/'+subsplit_f[1]+'.root '+args.f+'/*.root')
-#os.system('rm -r '+args.f)
+os.system('rm -r '+args.f)
 

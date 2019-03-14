@@ -1,4 +1,4 @@
-import ROOT, glob
+import ROOT, glob, os
 from helpers import getObjFromFile
 
 class Sample:
@@ -66,7 +66,13 @@ def createSampleList(fileName):
     sampleInfos = [line.split() for line in sampleInfos if line]                              # Get lines into tuples
     for name, path, output, splitJobs, xsec in sampleInfos:
         if splitJobs == 'Calc':
-            splitJobs = (len(glob.glob(path + '/*.root'))/10.)+0.5
+            if path.endswith('.root'):
+                file_info = os.stat(path)
+                file_size = file_info.st_size
+                splitJobs = (file_size/400000000.)+0.5
+            else:
+                splitJobs = (len(glob.glob(path + '/*.root'))/10.)+0.5
+        if int(splitJobs) == 0:       splitJobs = 1
         yield Sample(name, path, output, int(splitJobs), xsec)
 
 def getSampleFromList(sampleList, name):

@@ -4,7 +4,7 @@ from helpers import getObjFromFile
 
 class subSample():
     
-    FILES_PER_JOB = 5.
+    FILES_PER_JOB = 20.
 
     def __init__(self, path, subdir):
         self.subdir      = subdir
@@ -17,6 +17,10 @@ class subSample():
         self.name       = split_up_path[9]
         if 'SingleMuon' in self.group:
             self.FILES_PER_JOB = 10.
+        if 'TChi' in self.group:
+            self.FILES_PER_JOB = 10.
+        if 'WZ' in self.group or 'ZZ' in self.group:
+            self.FILES_PER_JOB = 13.
         if 'TTJets' in self.group or 'QCD_HT1000to1500' in self.group: 
             self.FILES_PER_JOB = 10.
         

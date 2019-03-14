@@ -70,12 +70,11 @@ def GetNestedMax(arr):
         localMax.append(np.max(a))
     return np.max(localMax)
 
-def extraTextFormat(text, xpos = None, ypos = None, textsize = None):
-    return [text, xpos, ypos, textsize]
+def extraTextFormat(text, xpos = None, ypos = None, textsize = None, align = 12):
+    return [text, xpos, ypos, textsize, align]
 
 def DrawExtraText(pad, additionalInformation):
     pad.cd()
-
     #Write extra text
     if additionalInformation is not None:
         lastYpos = 0.8
@@ -106,12 +105,12 @@ def DrawExtraText(pad, additionalInformation):
                 if lastYpos is None:
                     extraTextYpos = lastCorrectedYpos - correction_term
                 else: extraTextYpos = lastYpos - correction_term
-
+            
             extraText.SetNDC()
-            extraText.SetTextAlign(12)
+            extraText.SetTextAlign(info[4])
             extraText.SetTextSize(extraTextSize)
             extraText.DrawLatex(extraTextXpos, extraTextYpos, extraTextString)
-
+            
             lastXpos = extraTextXpos
             lastYpos = info[2]
             lastCorrectedYpos = extraTextYpos
@@ -360,54 +359,7 @@ def DrawHist(hist, xlabel, ylabel, legendNames, destination, ylog = False):
     Canv.SaveAs(destination + ".png")    
     Canv.SaveAs(destination + ".root")
 
-def DrawSignificance(hist, destination, legendNames = None, ylog = False):
-    GeneralSettings()
-
-    #Create Canvas
-    Canv = TCanvas("Canv"+destination, "Canv"+destination, 1000, 1000)
-
-    tdr.setTDRStyle()
-
-    #Set Histogram Styles
-    for h in hist:
-        h.SetLineColor(TColor.GetColor(GetHistColor(hist.index(h))))
-    title = " ; ; S/#sqrt{S+B}"
-    hist[0].SetTitle(title)
-    
-    OverallMax = GetOverallMaximum(hist)
-    OverallMin = GetOverallMinimum(hist)
-
-    if ylog :
-        Canv.SetLogy()
-        hist[0].GetYaxis().SetRangeUser(0.3*OverallMin, 30*OverallMax)
-    else :
-        hist[0].GetYaxis().SetRangeUser(0.7*OverallMin, 1.3*OverallMax)
-
-    #Start Drawing
-    for h in hist:
-        if(hist.index(h) == 0) :
-            h.Draw("EP")
-        else:
-            h.Draw("EPSAME")
-
-    #Create Legend
-    if legendNames :
-        legend = TLegend(0.7, .7, .9, .9)
-        for h, n in zip(hist, legendNames):
-            legend.AddEntry(h, n)
-        legend.SetFillStyle(0)
-        legend.SetBorderSize(0)
-        legend.Draw()
-    
-    #CMS lumi
-    cl.CMS_lumi(Canv, 4, 11, 'Simulation', False)
-
-    #Save
-    Canv.SaveAs(destination + ".pdf")    
-    Canv.SaveAs(destination + ".png")    
-    Canv.SaveAs(destination + ".root")
-
-def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName, destination, ylog = False, customLabels = None, extraText = None):
+def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName, destination, ylog = False, customLabels = None, extraText = None, scaleSignalToBkgr = False, DivideByLine = None):
     GeneralSettings()
 
     #Make sure the code works for single backgrounds
@@ -416,8 +368,18 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
     if not isinstance(SignalHist,(list,)):
         SignalHist = [SignalHist]
 
+    #Add all backgrounds
+    totBkgr = BkgrHist[0].Clone("TotBkgr")
+    for h in BkgrHist[1:]:
+        totBkgr.Add(h)
+   
+    #Normalize signal to background if needed
+    if scaleSignalToBkgr:
+        for h in SignalHist:
+            h.scale(totBkgr.GetSumOfWeights()/h.GetSumOfWeights)
+
     #Define a canvas
-    Canv = TCanvas("Canv"+destination, "Canv"+destination, 1000, 1000)
+    Canv = TCanvas("Canv"+destination, "Canv"+destination, 1500, 1000)
 
     #Set Histogram Styles
     for i, h in enumerate(BkgrHist) :
@@ -429,14 +391,10 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
         h.SetLineColor(TColor.GetColor(GetLineColor(i)))
         h.SetMarkerStyle(GetMarker(i))
 
-
     list_of_significance_hists = []
     
     for i, sh in enumerate(SignalHist):
         #Calculate significance
-        totBkgr = BkgrHist[0].Clone("TotBkgr")
-        for h in BkgrHist[1:]:
-            totBkgr.Add(h)
         total = totBkgr.Clone("Total")
         total.Add(sh)
         sqrt_total = total.Clone('Sqrt_Total')
@@ -458,29 +416,30 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
     for h in BkgrHist:
         hs.Add(h)
     hs.Draw("EHist")                                                            #Draw before using GetHistogram, see https://root-forum.cern.ch/t/thstack-gethistogram-null-pointer-error/12892/4
-    title = " ; ; Events / " +str(BkgrHist[0].GetBinWidth(1)) + " GeV"
+    title = " ; ; Events"
     hs.SetTitle(title)
 #    hs.GetHistogram().GetXaxis().SetTickLength(0)
     hs.GetHistogram().GetXaxis().SetLabelOffset(9999999)
     hs.GetHistogram().SetMaximum(1)
-
     #Set range
     overallMin = GetOverallMinimum(BkgrHist+SignalHist)
     overallMax = GetOverallMaximum([totBkgr]+SignalHist)
-   
+  
+     
     if ylog :
         if overallMin == 0.:
             overallMin = 0.5
-        hs.SetMinimum(0.3*overallMin)
-        hs.SetMaximum(30*overallMax)
+        ymin = 0.3*overallMin
+        ymax = 30*overallMax
         plotpad.SetLogy()
     else :
-        hs.SetMinimum(0.7*overallMin)
-        hs.SetMaximum(1.3*overallMax)
+        ymin = 0.7*overallMin
+        ymax = 1.3*overallMax
+    hs.SetMinimum(ymin)
+    hs.SetMaximum(ymax)
 
     for h in SignalHist:
         h.Draw("EPSame")
-
     #Create Legend
     legend = TLegend(0.7, .7, .9, .9)
     for h, n in zip(BkgrHist, legendNames):
@@ -491,11 +450,38 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
     legend.SetBorderSize(0)
 
     legend.Draw()
+    
+    #Draw lines if needed
+    if DivideByLine is not None:
+        tdrStyle_Left_Margin = 0.16
+        tdrStyle_Right_Margin = 0.02
+        plot_size_hor = 1 - tdrStyle_Left_Margin - tdrStyle_Right_Margin
+        #Option one, user provides the number of divisions and we divide equally
+        if isinstance(DivideByLine[0], int):
+            x_pos = np.linspace(totBkgr.GetXaxis().GetXmin(), totBkgr.GetXaxis().GetXmax(), DivideByLine[0]+1)
+        #Option two, user provides the specific boundaries
+        if isinstance(DivideByLine[0], (list,)):
+            x_pos =  DivideByLine[0]
 
+        #Draw the lines
+        lines = []
+        for i, x in enumerate(x_pos[1:-1]):
+            lines.append(TLine(x, ymin, x, ymax))
+            lines[i].SetLineColor(ROOT.kRed)
+            lines[i].SetLineStyle(10)
+        
+        for line in lines:
+            line.Draw('same')
+
+        #Add extra text
+        for i, name in enumerate(DivideByLine[1]):
+            x = ((x_pos[i+1]+x_pos[i])/(2*(x_pos[-1]-x_pos[0])/plot_size_hor)) + tdrStyle_Left_Margin
+            extraText.append(extraTextFormat(name, x, 0.1, None, 22))
+
+    #Draw extra text if needed
     if extraText is not None:
-        print extraText
         DrawExtraText(plotpad, extraText)
-
+    
     #Return to canvas
     Canv.cd()
     
@@ -506,6 +492,9 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
     ratiopad.Draw()
     ratiopad.cd()
 
+    overallMin = GetOverallMinimum(list_of_significance_hists)
+    overallMax = GetOverallMaximum(list_of_significance_hists)
+
     significance = list_of_significance_hists[0]
     #Set Style for bottom plot
     significance.SetTitle(";" + xtitle + "; S/#sqrt{S+B}")
@@ -515,9 +504,9 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
     significance.GetXaxis().SetLabelSize(.12)
     significance.GetYaxis().SetLabelSize(.12)
     significance.SetMinimum(0.)
-    #DataOverMC.GetYaxis().SetMaximum(2.)
+    significance.SetMaximum(0.3*overallMax)
     significance.Draw("EP")
-
+    
     for sig in list_of_significance_hists[1:]:
         sig.Draw('EPSame')
 
@@ -527,12 +516,18 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
         number_of_bins = significance.GetNbinsX()
         
         if number_of_bins != len(customLabels):
-            print 'Please provide '+str(number_of_bins)+ ' labels instead of '+ str(len(customLabels))
-            return
+            if DivideByLine is not None:
+                for i in range(number_of_bins):
+                    xaxis.SetBinLabel(i+1, customLabels[i%len(customLabels)]) #Only works when DivideByLine[0] is an integer
+            else:
+                print 'Please provide '+str(number_of_bins)+ ' labels instead of '+ str(len(customLabels))
+                return
         else:
             for i, label  in zip(range(number_of_bins), customLabels):
                 xaxis.SetBinLabel(i+1, label)  
-   
+  
+                    
+ 
     #Throw CMs lumi at it
     cl.CMS_lumi(Canv, 4, 11, 'Simulation Preliminary', True)
 
@@ -540,5 +535,7 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
     Canv.SaveAs(destination + ".pdf")
     Canv.SaveAs(destination + ".png")
     Canv.SaveAs(destination + ".root")
-    
+   
+
+    ROOT.SetOwnership(Canv,False)               #https://root-forum.cern.ch/t/tlatex-crashing-in-pyroot-after-many-uses/21638/4
     return
