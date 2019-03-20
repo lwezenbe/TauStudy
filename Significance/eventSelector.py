@@ -18,25 +18,25 @@ class generalEventSelector(object):
         #Muon discrimination working points
         self.MuonWorkingPoints = (None, Chain._tauMuonVetoLoose, Chain._tauMuonVetoTight)
         
-    def ptIsGood(self, lIndex):
+    def ptIsGood(self, lIndices):
         lPt = []
-        for l in lIndex:
+        lFlavor = []
+        for l in lIndices:
             lPt.append(self.Chain._lPt[l])
+            lFlavor.append(self.Chain._lFlavor[l])
         
-        sortedList = helpers.sortByOtherList(lIndex, lPt)
+        lFlavor = helpers.sortByOtherList(lFlavor, lPt)
         lPt = sorted(lPt)
 
         #Look at leading lepton
-        if self.Chain._lFlavor[sortedList[2]] == 1:
-            if self.Chain._lFlavor[sortedList[1]] != 1 or self.Chain._lFlavor[sortedList[0]] != 1:
-                if lPt[2] < 25:       return False
-            elif lPt[2] < 25:         return False                                      #Change this back
+        if lFlavor[2] == 1:
+            if lPt[2] < 25:           return False  
 
-        elif self.Chain._lFlavor[sortedList[2]] == 0:
+        elif lFlavor[2] == 0:
             if lPt[2] < 20:           return False
         
         #Look at subleading lepton
-        if self.Chain._lFlavor[sortedList[1]] == 1:
+        if lFlavor[1] == 1:
             if lPt[1] < 15:           return False
         else:
             if lPt[1] < 10:           return False
@@ -46,17 +46,17 @@ class generalEventSelector(object):
 
         #If two taus, ...
         if self.nTau == 2:
-            for l in lIndex:
+            for l in lIndices:
+                if abs(self.Chain._lEta[l]) > 2.1: return False
                 if self.Chain._lFlavor[l] == 0:
-                    if self.Chain._lPt[l] < 30: continue
+                    if self.Chain._lPt[l] < 30: return False
                 if self.Chain._lFlavor[l] == 1:
-                    if self.Chain._lPt[l] < 25: continue
-                    
+                    if self.Chain._lPt[l] < 25: return False
         return True
 
-    def passedInvariantMassCuts(self, lIndex):
+    def passedInvariantMassCuts(self, lIndices):
         vec = []
-        for l in lIndex:
+        for l in lIndices:
             v = TLorentzVector()
             v.SetPtEtaPhiE(self.Chain._lPt[l], self.Chain._lEta[l], self.Chain._lPhi[l], self.Chain._lE[l])
             vec.append(v)
@@ -65,14 +65,12 @@ class generalEventSelector(object):
         return True
 
     def isGoodEvent(self, iso_cut_index, ele_cut_index, mu_cut_index):
-
         #Select good leptons and save indices
         lIndex = []
         self.nTau = 0
         for l in xrange(ord(self.Chain._nL)):
             if not objSel.isGoodLepton(self.Chain, l):                                  continue
 
-        #    print self.Chain._lFlavor[l]
             #Tau selection cuts
             if self.Chain._lFlavor[l] == 2:
                 if not self.IsoWorkingPoints[iso_cut_index][l]:                         continue
@@ -96,7 +94,7 @@ class generalEventSelector(object):
         if not self.ptIsGood(lIndex):                                                   return False
 
         #Invariant mass cut
-        if self.passedInvariantMassCuts(lIndex):                                        return False
+        if not self.passedInvariantMassCuts(lIndex):                                     return False
         
         #Missing energy cut
         if self.Chain._met < 50.:                                                        return False
