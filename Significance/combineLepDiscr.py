@@ -10,6 +10,7 @@ NUMBER_OF_ISO_WP = 5
 ntau = ('singletau', 'ditau')
 
 background_names = ['VV', 'QCD', 'ST', 'TT', 'WJets', 'DYJets']
+#background_names = []
 signal_names = ['TChiWZ', 'TChiSlepSnu_x0p5', 'TChiSlepSnu_x0p05']
 
 def merge_specific_sample(sample_name, number_of_taus):
@@ -21,6 +22,7 @@ def merge_specific_sample(sample_name, number_of_taus):
     
         #Inner loop over electron working points, merge these into single plot
         for ele_cut_index in range(NUMBER_OF_ELE_WP):
+            print basefolder+'/'+sample_name+'_'+number_of_taus+'_'+str(ele_cut_index)+'_'+str(mu_cut_index)+'.root'
             tmp_hist = getObjFromFile(basefolder+'/'+sample_name+'_'+number_of_taus+'_'+str(ele_cut_index)+'_'+str(mu_cut_index)+'.root', number_of_taus)
             nBins = tmp_hist.GetNbinsX()
             for tmp_hist_bin in range(1, nBins+1):
