@@ -1,5 +1,6 @@
 import ROOT
 import objectSelection as objSel
+from helpers import showBranch
 
 def selectMuonsAN17_094(Chain):
     nMu = 0
@@ -25,17 +26,17 @@ def isGoodEventAN17_094(Chain):
 def isGoodEventEwkino(Chain):
     
     #Select good leptons and save indices
-    lIndex = []
+    lIndices = []
     nTau = 0
     
     for l in xrange(ord(Chain._nL)):
-        if Chain._lFlavor[l] != 2 and not objSel.isGoodLightLeptonSignificance(Chain, l):               continue
+        if Chain._lFlavor[l] != 2 and not objSel.isGoodLightLeptonEwkino(Chain, l):               continue
         if Chain._lFlavor[l] == 2 and not objSel.isGoodTauEwkino(Chain, l):                             continue
-        lIndex.append(l)
+        lIndices.append(l)
         if Chain._lFlavor[l] == 2: nTau += 1
 
     #Keep only events with exactly 3 good leptons
-    if len(lIndex) < 3:                                                        return False
+    if len(lIndices) < 3:                                                       return False
 
     if nTau < 1:                                                               return False
 
@@ -51,19 +52,3 @@ def isGoodEventEwkino(Chain):
     if contains_B_Jet:                                                          return False
 
     return True
-
-#def isGoodEventJana(Chain):
-#    nTau = 0
-#    lIndex = []
-#    for l in range(ord(Chain._nL)):
-#        if objSel.isGoodLepJana(Chain, l):
-#            lIndex.append(l)
-#            if Chain._lFlavor[l] == 2:
-#                nTau += 1.
-#    
-#    if len(lIndex) < 3:
-#        return False
-#    elif nTau < 1:
-#        return False
-#    else:
-#        return True

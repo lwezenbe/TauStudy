@@ -23,16 +23,15 @@ output_file = TFile('/user/lwezenbe/public/ntuples/tmp_'+subsample.group+'/'+sub
 output_file.cd()
 
 #Get hcounters
-if subsample.group != 'SingleMuon':      hCounter = subsample.gethCounter()
-if 'TChi' in subsample.group:            hCounterSUSY = subsample.gethCounterSUSY()
+if subsample.group != 'SingleMuon':      hCounter = subsample.getHist(int(args.subJob), 'hCounter')
+if 'TChi' in subsample.group:            hCounterSUSY = subsample.getHist(int(args.subJob), 'hCounterSUSY')
 
 #initialize new tree
 print Chain.GetEntries()
 output_tree = Chain.CloneTree(0)
-test=0
 
 if args.isTest:
-    eventRange = xrange(5000)
+    eventRange = xrange(10000)
 else:
     eventRange= xrange(Chain.GetEntries())
 
@@ -40,56 +39,18 @@ else:
 for entry in eventRange:
     progress(entry, len(eventRange))
     Chain.GetEntry(entry)
-    
     if args.analysis == 'ewkino':
-        if not isGoodEventEwkino(Chain):        
-
-        
-       #     print '----------------------------------'
-       #     print '--------WEEWOO NEW EVENT---------'
-       #     print '--------------------------------- \n'
-       #     print entry, Chain._lumiBlock, Chain._eventNb
-       #     print '\n ++++In principle this is gen++++'
-       #     print 'Flavor:', showBranch(Chain._gen_lFlavor)
-       #     print 'isPrompt:', showBranch(Chain._gen_lIsPrompt)
-       #     print 'pt:', showBranch(Chain._gen_lPt)
-       #     print 'eta:', showBranch(Chain._gen_lEta)
-       #     print 'phi:',showBranch(Chain._gen_lPhi)
-       #     print 'mom pdg:', showBranch(Chain._lMomPdgId)
-       #     print 'decayed hard:',showBranch(Chain._gen_lDecayedHadr)
-       #     print '\n ********Reco Bello********'
-       #     print 'Flavor:', showBranch(Chain._lFlavor)
-       #     print 'isPrompt:', showBranch(Chain._lIsPrompt)
-       #     print 'IsVLoose:', showBranch(Chain._lPOGVeto)
-       #     print 'IsLoose:', showBranch(Chain._lPOGLoose)
-       #     print 'IsEwkTight:', showBranch(Chain._lEwkTight)
-       #     print 'passMuonDiscr:', showBranch(Chain._tauMuonVetoLoose)
-       #     print 'passEleDiscr:', showBranch(Chain._tauEleVetoLoose)
-       #     print 'pt:', showBranch(Chain._lPt)
-       #     print 'eta:',showBranch(Chain._lEta)
-       #     print 'phi:',showBranch(Chain._lPhi)
-       #     print 'match pdg:', showBranch(Chain._lMatchPdgId)
-       #     print 'match pt:', showBranch(Chain._lMatchPt)
-       #     print 'match eta:', showBranch(Chain._lMatchEta)
-       #     print 'match phi:', showBranch(Chain._lMatchPhi)
-       #     print 'match decayed hadr:', showBranch(Chain._lMatchDecayedHadr)
-       #     print '\n'
-
-            continue
-    
+        if not isGoodEventEwkino(Chain):        continue
     elif args.analysis == 'tauAN':
         if not isGoodEventAN17_094(Chain):      continue
-
-    test+=1.
-
-    
     output_tree.Fill()
-print test
+
 output_file.cd()
 #Write
-output_tree.Write()
-if subsample.group != 'SingleMuon':      hCounter.Write()
-if 'TChi' in subsample.group:            hCounterSUSY.Write()
+if not args.isTest:
+    output_tree.Write()
+    if subsample.group != 'SingleMuon':      hCounter.Write()
+    if 'TChi' in subsample.group:            hCounterSUSY.Write()
 
 #Close the file
 output_file.Close()

@@ -3,12 +3,11 @@ import ROOT
 def lepHasOverlap(Chain, index):
 
     #Check the flavor of the lepton and initialize variables
-    hasOverlap = False
     inputVec = ROOT.TLorentzVector()
     inputVec.SetPtEtaPhiE(Chain._lPt[index], Chain._lEta[index], Chain._lPhi[index], Chain._lE[index])
 
     #Loop over all leptons with a different flavor
-    for l in xrange(ord(Chain._nL)):
+    for l in xrange(ord(Chain._nLight)):
         if l == index or Chain._lFlavor[l] == Chain._lFlavor[index]:            continue
         if not Chain._lEwkLoose[l]:                                             continue
 
@@ -16,9 +15,9 @@ def lepHasOverlap(Chain, index):
         lVec.SetPtEtaPhiE(Chain._lPt[l], Chain._lEta[l], Chain._lPhi[l], Chain._lE[l])
 
         dR = inputVec.DeltaR(lVec)
-        if dR < .4:         hasOverlap = True
+        if dR < .4:         return True
 
-    return hasOverlap
+    return False
 
 
 def isGoodMuonAN17_094(Chain, index):
@@ -40,7 +39,7 @@ def isGoodTauAN17_094(Chain, index):
     elif not Chain._tauEleVetoLoose[index]:     return False
     return True
 
-def isGoodLightLeptonSignificance(Chain, index):
+def isGoodLightLeptonEwkino(Chain, index):
  
     if Chain._lFlavor[index] == 2:              return False
     if not Chain._lEwkTight[index]:             return False
@@ -58,13 +57,14 @@ def isGoodTauEwkino(Chain, index):
     #elif not Chain._tauEleVetoLoose[index]:     return False
     return True
 
-#def isGoodLepJana(Chain, index):
-#    if not Chain._lPOGMedium[index]:            return False
-#    return True
+def isGoodLepJana(Chain, index):
+    if not Chain._lPOGVeto[index]:            return False
+    return True
 
 def isCleanJet(Chain, index):
 
     if Chain._jetPt[index] < 25.:     return False
+    if not Chain._jetIsLoose[index]:   return False
 
     jetVec = ROOT.TLorentzVector()
     jetVec.SetPtEtaPhiE(Chain._jetPt[index], Chain._jetEta[index], Chain._jetPhi[index], Chain._jetE[index])
