@@ -4,13 +4,13 @@ from helpers import getObjFromFile
 
 class subSample():
     
-    FILES_PER_JOB = 20.
+    FILES_PER_JOB = 30.
 
     def __init__(self, path, subdir):
         self.subdir      = subdir
         self.path        = path
         self.listOfAllFiles = glob.glob(path+'/*/000'+str(subdir)+'/*.root')
-        
+            
         #get correct naming first
         split_up_path   = self.path.split('/')
         self.group      = split_up_path[8]
@@ -25,14 +25,13 @@ class subSample():
             limits =  [(subjob*self.FILES_PER_JOB)+1, ((subjob + 1)*self.FILES_PER_JOB)+1]
         elif subjob == self.totalJobs-1:
             limits =  [(subjob*self.FILES_PER_JOB)+1, len(self.listOfAllFiles)]
-        print limits
         return xrange(int(limits[0]), int(limits[1]))
 
     def filesInSubjob(self, subjob):
         files_in_subjob = self.getFileRange(subjob)
         list_of_files = []
         for f in files_in_subjob:
-            subfile = glob.glob(self.path + '/*/000'+str(self.subdir)+'/*_'+str(f)+'.root')
+            subfile = glob.glob(self.path + '/*/000'+str(self.subdir)+'/*_'+str(f + 1000*self.subdir)+'.root')
             if len(subfile) > 0:
                 list_of_files.append(subfile[0])
             else:

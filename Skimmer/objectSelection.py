@@ -58,7 +58,8 @@ def isGoodTauEwkino(Chain, index):
     return True
 
 def isGoodLepJana(Chain, index):
-    if not Chain._lPOGVeto[index]:            return False
+    if Chain._lFlavor[index] == 2 and not Chain._lPOGVeto[index]:            return False
+    if Chain._lFlavor[index] != 2 and not Chain._lPOGMedium[index]:            return False
     return True
 
 def isCleanJet(Chain, index):

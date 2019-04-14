@@ -23,6 +23,17 @@ def isGoodEventAN17_094(Chain):
 
     return True
 
+def isGoodEventJana(Chain):
+    lIndices = 0
+    nTau = 0    
+ 
+    for l in xrange(ord(Chain._nL)):
+        if Chain._lFlavor[l] != 2 and not objSel.isGoodLightLeptonEwkino(Chain, l):               continue
+        if Chain._lFlavor[l] == 2 and not objSel.isGoodTauEwkino(Chain, l):                             continue
+        lIndices.append(l)
+        if Chain._lFlavor[l] == 2: nTau += 1
+
+
 def isGoodEventEwkino(Chain):
     
     #Select good leptons and save indices
