@@ -1,17 +1,18 @@
 import ROOT
 import argparse
 from ROOT import TLorentzVector, TH1D
-from numpy import zeros, savetxt
-import Constants as cst
 import Sample
 from helpers import progress, makeDirIfNeeded
-from objectSelection import lepHasOverlap, geometricMatch
+import numpy as np
+import objectSelection as objSel
+from efficiency import efficiency
+from ROC import ROC
 
 argParser = argparse.ArgumentParser(description = "Argument parser") 
 argParser.add_argument('--sampleName',  action='store',         default='DYJetsToLL_M-50') 
 argParser.add_argument('--subJob',      action='store',         default=0) 
 argParser.add_argument('--method',      action='store',         default='Default') 
-argParser.add_argument('--inputFile',   action='store',         default='inputFiles') 
+argParser.add_argument('--inputFile',   action='store',         default='inputFilesv3') 
 argParser.add_argument('--isTest',      action='store',         default=False) 
  
 args = argParser.parse_args() 
@@ -19,7 +20,12 @@ args = argParser.parse_args()
 sampleList = Sample.createSampleList('/user/lwezenbe/private/PhD/Code/TauStudy/Efficiency/Data/'+ args.inputFile  +'.conf') 
 sample = Sample.getSampleFromList(sampleList, args.sampleName)
 
-Chain = sample.initTree()
+Chain = sample.initTree(needhCount=False)
+
+#Define the algorithms and their working points
+tau_id_algos = [('oldMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('newMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('cut_based', ['VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight'])]   #If you add more ID's, don't forget to change it in the getTauIDs() function in objectSelection as well
 
 #################################################################################################
 #####################################METHOD FUNCTIONS############################################
@@ -28,79 +34,56 @@ Chain = sample.initTree()
 #################################################################################################
 
 def CalcFakeRate(Chain, sample, args):
-    global totJets
-    global passedTau
-    global ptHistNum
-    global ptHisDenom
-    global etaHistNum
-    global etaHistDenom
+    global roc
+    global ptHist
+    global etaHist
 
-    for lepton in xrange(ord(Chain._nL)):
+    for lepton in xrange(Chain._nL):
 
-        if not Chain._lFlavor[lepton] == 2:                                     continue
+        if not objSel.isFakeTau(Chain, lepton):     continue
 
-        #if Chain._lIsPrompt[lepton]:                                            continue
-        if geometricMatch(Chain, lepton) != -1:                                 continue
-        #if lepHasOverlap(Chain, lepton):                                        continue
+        for i in xrange(len(tau_id_algos)):
+            roc[i].fill_misid_denominator(Chain._weight)
+            ptHist[i].fill_denominator(Chain._lPt[lepton], Chain._weight)
+            etaHist[i].fill_denominator(Chain._lEta[lepton], Chain._weight)
 
-        if Chain._lPt[lepton] < 20 or abs(Chain._lEta[lepton] > 2.3):     continue
-
-        genTauVec = TLorentzVector()
-        genTauVec.SetPtEtaPhiE(Chain._lPt[lepton], Chain._lEta[lepton], Chain._lPhi[lepton], Chain._lE[lepton])
-
-        totJets += 1.
-        ptHistDenom.Fill(Chain._lPt[lepton], Chain._weight)
-        etaHistDenom.Fill(Chain._lEta[lepton], Chain._weight)
-
-        if lepHasOverlap(Chain, lepton):                                        continue
-        if not Chain._decayModeFinding[lepton]:                                 continue
+        if objSel.lepHasOverlap(Chain, lepton):                                        continue
         if not Chain._tauEleVetoVLoose[lepton]:                                  continue
         if not Chain._tauMuonVetoLoose[lepton]:                                 continue
 
-        discriminator = []
-        discriminator.append([Chain._lPOGVeto[lepton], Chain._lPOGLoose[lepton], Chain._lPOGMedium[lepton], Chain._lPOGTight[lepton], Chain._tauVTightMvaOld[lepton]])
-        discriminator.append([Chain._tauVLooseMvaNew[lepton], Chain._tauLooseMvaNew[lepton], Chain._tauMediumMvaNew[lepton], Chain._tauTightMvaNew[lepton], Chain._tauVTightMvaNew[lepton]])
-        iso = Chain._tauCombinedIsoDBRaw3Hits[lepton]
-        discriminator.append([iso < 4.5, iso < 3.5, iso < 2.0, iso < 1.0, iso < 0.8])
+        DMfinding = objSel.getDMfinding(Chain, lepton)
+        discriminators = objSel.getTauIDs(Chain, lepton) 
 
-        for discr in xrange(len(cst.discriminatorNames)):
-            if discr == cst.discriminatorNames.index('Cut_Based'):
-                workingPoints = cst.workingPointsCut
-            else:
-                workingPoints = cst.workingPointsMVA
+        for i, discr in enumerate(discriminators):
+            if not DMfinding[i]: continue
 
-            for WP in xrange(len(workingPoints)):
-                if discriminator[discr][WP]:
-                    passedTau[discr][WP] += 1.
-                    ptHistNum[discr][WP].Fill(Chain._lPt[lepton], Chain._weight)
-                    etaHistNum[discr][WP].Fill(Chain._lEta[lepton], Chain._weight)
-
+            for j, WP in enumerate(discr):
+                if WP:
+                    roc[i].fill_misid_numerator(j, Chain._weight)
+                    ptHist[i].fill_numerator(Chain._lPt[lepton], j, Chain._weight)
+                    etaHist[i].fill_numerator(Chain._lEta[lepton], j, Chain._weight)
 
 ###########
 #Main body#
 ###########
 
 #Whatever needs to be saved at the end
-totJets = 0.0
-passedTau = zeros((3,5))
+pt_bins = np.linspace(20, 120, 11)
+eta_bins = np.linspace(-2.4, 2.4, 25)
 
-ptHistDenom = TH1D("pt_fakerate_denom", "pt_fakerate_denom", 10, 20, 120)
-etaHistDenom = TH1D("eta_fakerate_denom", "eta_fakerate_denom", 24, -2.4, 2.4)
+basefolder = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Efficiency/Histos/All/'
+makeDirIfNeeded(basefolder)
+makeDirIfNeeded(basefolder+sample.output)
+makeDirIfNeeded(basefolder+sample.output+'/'+args.method)
+basefolder = basefolder + sample.output + '/' + args.method
 
-ptHistNum = []
-etaHistNum = []
-for discr in cst.discriminatorNames:
-    tmppt = []
-    tmpeta = []
-    if discr == 'Cut_Based':
-        workingPoints = cst.workingPointsCut
-    else:
-        workingPoints = cst.workingPointsMVA
-    for WP in workingPoints:
-        tmppt.append(TH1D("pt_efficiency_num_"+ discr + "_" + WP, "pt_efficiency_num"+ discr + "_" + WP, 10, 20, 120))
-        tmpeta.append(TH1D("eta_efficiency_num"+ discr + "_" + WP, "eta_efficiency_num"+ discr + "_" + WP, 24, -2.4, 2.4))
-    ptHistNum.append(tmppt)
-    etaHistNum.append(tmpeta)
+roc = []
+ptHist = []
+etaHist = []
+for tau_id in tau_id_algos:
+    roc.append(ROC('roc_fakerate_'+tau_id[0], tau_id[1]))
+    ptHist.append(efficiency('pt_fakerate_'+tau_id[0], pt_bins, tau_id[1]))
+    etaHist.append(efficiency('eta_fakerate_'+tau_id[0], eta_bins, tau_id[1]))
 
 if args.isTest:
     eventRange = range(5000)
@@ -112,26 +95,10 @@ for entry in eventRange:
     Chain.GetEntry(entry)
     
     CalcFakeRate(Chain, sample, args)
-   
-print passedTau, totJets
      
 if not args.isTest:
     #save
-    basefolder = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Efficiency/Histos/All/'
-    makeDirIfNeeded(basefolder)
-    makeDirIfNeeded(basefolder+sample.output)
-    makeDirIfNeeded(basefolder+sample.output+'/'+args.method)
-    basefolder = basefolder + sample.output +'/'+ args.method
-    savetxt(basefolder+'/fakerate_totJets_'+sample.name + '_subjob'+str(args.subJob)+'.dat', [totJets])
-    savetxt(basefolder+'/fakerate_passedTau_'+sample.name + 'subjob'+str(args.subJob)+'.dat', passedTau)
-    ptHistDenom.SaveAs(basefolder+'/pt_fakerate_denom_'+sample.name + 'subjob'+str(args.subJob)+'.root')
-    etaHistDenom.SaveAs(basefolder+'/eta_fakerate_denom_'+sample.name + 'subjob'+str(args.subJob)+'.root')
-    for discr in cst.discriminatorNames:
-        if discr == 'Cut_Based':
-            workingPoints = cst.workingPointsCut
-        else:
-            workingPoints = cst.workingPointsMVA
-        for WP in workingPoints:
-            ptHistNum[cst.discriminatorNames.index(discr)][workingPoints.index(WP)].SaveAs(basefolder+'/pt_fakerate_num_'+discr+'_'+WP+'_'+sample.name + 'subjob'+str(args.subJob)+'.root') 
-            etaHistNum[cst.discriminatorNames.index(discr)][workingPoints.index(WP)].SaveAs(basefolder+'/eta_fakerate_num_'+discr+'_'+WP+'_'+sample.name + 'subjob'+str(args.subJob)+'.root')
-
+    for i in xrange(len(tau_id_algos)):
+        roc[i].write(basefolder, str(args.subJob))
+        ptHist[i].write(basefolder, str(args.subJob))
+        etaHist[i].write(basefolder, str(args.subJob))

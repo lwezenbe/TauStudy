@@ -1,12 +1,13 @@
 import ROOT, os, time
 from ROOT import TFile, TCanvas, TGraphErrors
-from plottingTools import plotROC, DrawHist, extraTextFormat
+from plottingTools import plotROC, DrawHist, extraTextFormat, plotROCfromgraph
 from helpers import getObjFromFile, loadtxtCstyle, makeDirIfNeeded
 import numpy as np
+from ROC import ROC
 import argparse
 
 argParser = argparse.ArgumentParser(description = "Argument parser")
-argParser.add_argument('category',              action='store',         help='Print isolation or lepton discrimination. Enter "Iso", "lepDiscr" or "All')
+argParser.add_argument('category',              action='store',         help='Print isolation or lepton discrimination. Enter "Iso", "LepDiscr" or "All')
 argParser.add_argument('effName',               action='store',         help='Name of the efficiency sample subfolder')
 argParser.add_argument('--effMethod',           action='store',         help='Name of the efficiency sample subfolder',           default='AN')
 argParser.add_argument('frName',                action='store',         help='Name of the fakerate sample subfolder')
@@ -14,32 +15,29 @@ argParser.add_argument('--frMethod',            action='store',         help='Na
 
 args = argParser.parse_args()
 
+if args.category == 'LepDiscr':
+    basefolder = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Efficiency/Histos/LepDiscr'
+    tau_id_algos = [('MuonDiscr', ['Loose',  'Tight']),
+                    ('ElectronDiscr', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight'])]   #Change getTauLepDiscr() accordingly
+
+else:
+    #Define the algorithms and their working points
+    tau_id_algos = [('oldMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                    ('newMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                    ('cut_based', ['VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight'])]   #If you add more ID's, don't forget to change it in the getTauIDs() function in objectSelection as well
+
+    basefolder = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Efficiency/Histos/Iso'
+
 samples = [args.effName, args.frName]
 methods = [args.effMethod, args.frMethod]
 basefolderInput = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Efficiency/Histos/'+args.category+'/Merged'
 basefolderOutput = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Efficiency/Plots/'+args.category
 
-
-if(args.category == 'Iso' or args.category == 'All'):
-    discriminatorNames = ['OldMVA', 'NewMVA', 'Cut_Based']
-    workingPointsMVA = ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']
-    workingPointsCut = ['VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight']
-elif(args.category == 'LepDiscr'):
-    discriminatorNames = ['MuonDiscr', 'ElectronDiscr']
-    workingPointsEle = ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']
-    workingPointsMu = ['Loose', 'Tight']
-
 efficiencyOrfakerate = ['efficiency', 'fakerate']
 efficiencyOrfakerateFile = ['Efficiency', 'FakeRate']
 
 var = ['pt', 'eta']
-xNames = [['p_{T}^{#tau} [GeV]', '#abs{#eta}_{#tau}'],['p_{T}^{jet} [GeV]', '#abs{#eta}^{jet}']]
-
-efficiencyROC = np.loadtxt(basefolderInput + '/Efficiency/'+args.effMethod+'/' + samples[0]+ '/efficienciesROC.dat')
-efficiencyErrorsROC = np.loadtxt(basefolderInput+ '/Efficiency/'+ args.effMethod+'/'+samples[0]+ '/efficienciesErrorsROC.dat')
-
-fakerateROC = np.loadtxt(basefolderInput+'/FakeRate/'+args.frMethod+'/'+samples[1]+'/fakeratesROC.dat')
-fakerateErrorsROC = np.loadtxt(basefolderInput+'/FakeRate/'+args.frMethod+'/'+samples[1]+'/fakeratesErrorsROC.dat')
+xNames = [['p_{T}^{#tau} [GeV]', '|#eta|_{#tau}'],['p_{T}^{jet} [GeV]', '|#eta|^{jet}']]
 
 #make output directory
 timestamp = time.strftime("%Y%m%d_%H%M%S")
@@ -51,45 +49,34 @@ makeDirIfNeeded(basefolderOutput+'/ROC')
 
 #ROC
 extraText = []
-#extraText.append(extraTextFormat("Efficiency: Z #rightarrow #tau #tau MC"))
-#extraText.append(extraTextFormat("FR : QCD multijet (not flat) MC"))
 extraText.append(extraTextFormat("Efficiency: "+ samples[0]  +" MC"))
 extraText.append(extraTextFormat("FR : "+samples[1]+" MC"))
 extraText.append(extraTextFormat('p_{T}^{#tau} > 20 GeV, |#eta_{#tau}| < 2.3'))
 
-flatXerror = []
-flatYerror = []
-for n, name in enumerate(discriminatorNames):
+ROC_graphs = []
+for n, name in enumerate(tau_id_algos):
     if(args.category == 'Iso'):             ylabel = "jet -> #tau FR"
     elif(args.category == 'LepDiscr'and n == 0):      ylabel = "#mu -> #tau FR"
     elif(args.category == 'LepDiscr'and n == 1):      ylabel = "e -> #tau FR"
     else:                                   ylabel = "Fake Rate"
-    xdata = efficiencyROC[n]
-    xdata = xdata.flatten('C')
-    xerrors = efficiencyErrorsROC[n].flatten('C')
-    if args.category == 'LepDiscr' and n == 0:  
-        xdata = xdata[:2]                #temporary fix to the shorter number of muon discr
-        xerrors = xerrors[:2]
-    flatXerror.append(xerrors)
-    ydata = fakerateROC[n]
-    ydata = ydata.flatten('C')
-    yerrors = fakerateErrorsROC[n].flatten('C')
-    if args.category == 'LepDiscr' and n == 0:
-        ydata = ydata[:2]
-        yerrors = yerrors[:2]
-    flatYerror.append(yerrors)
-    plotROC(xdata, ydata, "Efficiency (%)", ylabel, name, basefolderOutput+"/ROC/ROC_"+name, xerrors, yerrors, False, True, extraText)
 
-if not args.category == 'LepDiscr': plotROC(efficiencyROC, fakerateROC, "Efficiency (%)", ylabel, discriminatorNames, basefolderOutput+"/ROC/ROC_All", flatXerror, flatYerror,False, True, extraText)
+    tmproc = ROC(name[0])
+    tmproc.load_efficiency('roc_efficiency_'+name[0], basefolderInput + '/Efficiency/'+args.effMethod+'/' + samples[0]+ '/roc_efficiency_'+ name[0]+'.root') 
+    tmproc.load_fakerate('roc_fakerate_'+name[0], basefolderInput + '/FakeRate/'+args.frMethod+'/' + samples[1]+ '/roc_fakerate_'+ name[0]+'.root') 
 
+    ROC_graphs.append(tmproc.return_graph())
+    if args.category == 'LepDiscr': plotROCfromgraph(ROC_graphs[n], "Efficiency (%)", ylabel, name[0], basefolderOutput+"/ROC/ROC_"+name[0], False, True, extraText)
+
+discr = [x[0] for x in tau_id_algos]
+if not args.category == 'LepDiscr': plotROCfromgraph(ROC_graphs,  "Efficiency (%)", ylabel, discr, basefolderOutput+"/ROC/ROC_All",False, True, extraText)
+
+from efficiency import efficiency
 for v in var:
-    for categ, categName, method, Sample in zip(efficiencyOrfakerate, efficiencyOrfakerateFile, methods, samples):
-        for d in discriminatorNames:
-            if d == 'Cut_Based':                workingPoints = workingPointsCut
-            elif d == 'MuonDiscr':              workingPoints = workingPointsMu
-            elif d == 'ElectronDiscr':          workingPoints = workingPointsEle
-            else:                               workingPoints = workingPointsMVA
+    for d in tau_id_algos:
+        for categ, categName, method, Sample in zip(efficiencyOrfakerate, efficiencyOrfakerateFile, methods, samples):
+            f = basefolderInput+ '/'+categName+ '/'+method+'/'+Sample+'/'+v+'_'+categ+'_'+d[0]+'.root'
+            eff = efficiency(v+'_'+categ+'_'+d[0], f)
             tmp = []
-            for WP in workingPoints:
-                tmp.append(getObjFromFile(basefolderInput+ '/'+categName+'/'+method+'/'+Sample+'/'+v+'_'+categ+'_'+d+'_'+WP+'.root', v+'_'+categ+'_'+d+'_'+WP))
-            DrawHist(tmp, xNames[efficiencyOrfakerate.index(categ)][var.index(v)], categName, workingPoints, basefolderOutput+'/'+categ+'_'+v+'_'+d) 
+            for i ,WP in enumerate(d[1]):
+                tmp.append(eff.get_efficiency(i, 'efficiency' in categ))
+            DrawHist(tmp, xNames[efficiencyOrfakerate.index(categ)][var.index(v)], categName, d[1], basefolderOutput+'/'+categ+'_'+v+'_'+d[0]) 
