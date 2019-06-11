@@ -5,7 +5,7 @@ def isGoodBaseEvent(Chain):
     
     nLooseTau = 0.
     lIndex = []
-    for l in xrange(ord(Chain._nL)):
+    for l in xrange(Chain._nL):
         if objectSelection.isGoodLightLep(Chain, l):    
             lIndex.append(l)
         elif objectSelection.isLooseTau(Chain, l):
@@ -25,15 +25,10 @@ def isGoodBaseEvent(Chain):
     l1 = TLorentzVector()
     l2 = TLorentzVector()
 
-
-    #print Chain._lPt[lIndex[0]], Chain._lEta[lIndex[0]], Chain._lPhi[lIndex[0]], Chain._lE[lIndex[0]]
-    #print Chain._lPt[lIndex[1]], Chain._lEta[lIndex[1]], Chain._lPhi[lIndex[1]], Chain._lE[lIndex[1]]
     l1.SetPtEtaPhiE(Chain._lPt[lIndex[0]], Chain._lEta[lIndex[0]], Chain._lPhi[lIndex[0]], Chain._lE[lIndex[0]])
     l2.SetPtEtaPhiE(Chain._lPt[lIndex[1]], Chain._lEta[lIndex[1]], Chain._lPhi[lIndex[1]], Chain._lE[lIndex[1]])
-    #print (l1+l2).M()
     if abs((l1+l2).M()-91.19) > 15:     return -1
 
-    #print Chain._lFlavor[lIndex[0]], Chain._lFlavor[lIndex[1]], Chain._lFlavor[lIndex[2]]
     return lIndex[2]
     
         
