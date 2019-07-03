@@ -50,9 +50,7 @@ Chain = sample.initTree()
 
 #Determine if testrun so it doesn't need to calculate the number of events in the getEventRange (current bottleneck)
 if args.isTest:
-    eventRange = sample.getEventRange(int(args.subJob))
-    print len(eventRange)
-    #eventRange = xrange(30000)
+    eventRange = xrange(30000)
 else:
     eventRange = sample.getEventRange(int(args.subJob))
     print len(eventRange)
