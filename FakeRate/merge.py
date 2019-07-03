@@ -1,10 +1,10 @@
 import os
-input_dir = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate'
+import glob
 
-#os.system('hadd -f '+input_dir+'/DYJets/fakeRate_denom.root ' + input_dir+'/DYJets/fakeRate_denom_*.root')
-#os.system('hadd -f '+input_dir+'/DYJets/fakeRate_num.root ' +input_dir+'/DYJets/fakeRate_num_*.root')
-os.system('hadd -f '+input_dir+'/fakeRate.root ' +input_dir+'/fakeRate_*.root')
+inputfolders = glob.glob('Data/tmp_fakeRate*')
 
-#os.system('rm '+input_dir+'/DYJets/fakeRate_denom_*.root')
-#os.system('rm '+input_dir+'/DYJets/fakeRate_num_*.root')
-os.system('rm '+input_dir+'/fakeRate_*.root')
+for folder in inputfolders:
+    name = folder.split('/')[-1].split('_')[-1]
+    print name
+    os.system('hadd -f Data/'+ name +'.root ' +folder+'/fakeRate*.root')
+    #os.system('rm -r '+folder)

@@ -7,7 +7,7 @@ class fakeRate():
 
     PT_BINS = np.array([20., 25., 35., 50., 70., 100.])
     ETA_BINS = np.array([0., 0.5, 1., 1.5, 2., 2.5])
-    OUTPUT_DIR = '/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/Data'
+    OUTPUT_DIR = '/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate'
     
     def __init__(self, name):
         self.fakeRate_num = ROOT.TH2D('fakeRate_num', 'fakeRate_num', len(self.PT_BINS) - 1, self.PT_BINS, len(self.ETA_BINS) - 1, self.ETA_BINS)
@@ -15,8 +15,7 @@ class fakeRate():
         self.fakeRate_denom = ROOT.TH2D('fakeRate_denom', 'fakeRate_denom', len(self.PT_BINS) - 1, self.PT_BINS, len(self.ETA_BINS) - 1, self.ETA_BINS)
         self.fakeRate_denom.Sumw2()
         self.name = name
-        print 'tmp_'+name.split('_')[0].split('-')[0]
-    
+
     def fill_numerator(self, entries, weight = 1.):
         xval = entries[0]
         yval = entries[1]
@@ -47,9 +46,7 @@ class fakeRate():
 
     def writeFR(self):
         makeDirIfNeeded(self.OUTPUT_DIR)
-        folder_name = 'tmp_'+self.name.split('_')[0].split('-')[0]
-        makeDirIfNeeded(self.OUTPUT_DIR +'/'+folder_name)
-        output_file = ROOT.TFile(self.OUTPUT_DIR + '/'+folder_name+'/' + self.name + '.root', 'recreate')
+        output_file = ROOT.TFile(self.OUTPUT_DIR + '/' + self.name + '.root', 'recreate')
         output_file.cd()
         self.fakeRate_num.Write()
         self.fakeRate_denom.Write()

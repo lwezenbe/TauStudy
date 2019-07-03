@@ -2,7 +2,8 @@ from helpers import getObjFromFile
 
 class fakeRateCalculator():
     
-    INPUT_PATH = '/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/fakeRate.root'
+    INPUT_PATH = '/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/Data/fakeRateDATA2016.root'
+    #INPUT_PATH = '/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/Data/tmp_fakeRateData2016/fakeRateData2016-Data_2016_subJob0.root'
     
     #num_file = '/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/DYJets/fakeRate_num.root' 
     #denom_file = '/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/DYJets/fakeRate_denom.root' 
