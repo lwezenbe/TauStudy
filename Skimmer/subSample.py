@@ -1,44 +1,46 @@
+import os
 import ROOT, glob
 from helpers import getObjFromFile
 
 
 class subSample():
     
-    FILES_PER_JOB = 30.
+    MAX_FILESIZE_PER_JOB = 900                      #FileSize in MB
 
     def __init__(self, path, subdir):
         self.subdir      = subdir
         self.path        = path
-        self.listOfAllFiles = glob.glob(path+'/*/000'+str(subdir)+'/*.root')
-            
+        self.listOfAllFiles = sorted(glob.glob(path+'/*/000'+str(subdir)+'/*.root'))
+        self.listOfSubjobs = None        
+
         #get correct naming first
         split_up_path   = self.path.split('/')
-        self.group      = split_up_path[8]
-        self.name       = split_up_path[9]
-        
-        self.totalJobs   = int(round((len(self.listOfAllFiles)/self.FILES_PER_JOB)+0.5))
+        self.group      = split_up_path[-2]
+        self.name       = split_up_path[-1]
         self.Chain       = None
-        
-    def getFileRange(self, subjob):
-        limits = None
-        if subjob < self.totalJobs-1:
-            limits =  [(subjob*self.FILES_PER_JOB)+1, ((subjob + 1)*self.FILES_PER_JOB)+1]
-        elif subjob == self.totalJobs-1:
-            limits =  [(subjob*self.FILES_PER_JOB)+1, len(self.listOfAllFiles)]
-        return xrange(int(limits[0]), int(limits[1]))
 
-    def filesInSubjob(self, subjob):
-        files_in_subjob = self.getFileRange(subjob)
-        list_of_files = []
-        for f in files_in_subjob:
-            subfile = glob.glob(self.path + '/*/000'+str(self.subdir)+'/*_'+str(f + 1000*self.subdir)+'.root')
-            if len(subfile) > 0:
-                list_of_files.append(subfile[0])
-            else:
-                print 'file ' + str(f) + ' seems to be missing'
-    
-        return list_of_files
-   
+    @staticmethod
+    def fileSize(path):              #return filesize in MB
+        file_info = os.stat(path)
+        file_size = file_info.st_size
+        file_size_MB = 0.000001*file_size
+        return file_size_MB
+
+    def arrangeFilesInSubjobs(self):
+        self.listOfSubjobs = []
+        total_size = 0
+        tmp_list = []
+        for f in self.listOfAllFiles:
+            tmp_size = total_size + self.fileSize(f)
+            if tmp_size < self.MAX_FILESIZE_PER_JOB:
+                tmp_list.append(f)
+                total_size = tmp_size
+            else:       #Append, Reset counter and tmp
+                self.listOfSubjobs.append(tmp_list)
+                tmp_list = [f]
+                total_size = self.fileSize(f)
+        return self.listOfSubjobs
+
     #Get combined hCounter or hCounterSUSY 
     def getHist(self, subjob, name, subPath = None):                                            
         if subPath is None:             subPath = self.path
@@ -47,7 +49,7 @@ class subSample():
             return hCounter
         else:
             hCounter = None
-            for f in self.filesInSubjob(subjob):
+            for f in self.arrangeFilesInSubjobs()[subjob]:
                 if hCounter is None:     hCounter = self.getHist(subjob,name, f)
                 else:                    hCounter.Add(self.getHist(subjob, name, f))
                 print hCounter.GetSumOfWeights()
@@ -55,8 +57,10 @@ class subSample():
     
     def initChain(self, subjob):
         self.Chain              = ROOT.TChain('blackJackAndHookers/blackJackAndHookersTree')
-
-        for f in self.filesInSubjob(subjob):
+        
+        for f in self.arrangeFilesInSubjobs()[subjob]:
+            if 'pnfs' in f:
+                f = 'root://maite.iihe.ac.be'+f
             self.Chain.Add(f)
 
         return self.Chain 
@@ -70,4 +74,14 @@ def createSampleList(fileName):
         list_of_paths += glob.glob(sample[0])
     return list_of_paths
 
-
+if __name__ == "__main__":
+    #s = subSample('/pnfs/iihe/cms/store/user/lwezenbe/heavyNeutrino/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/crab_MiniAOD2016v3_ext1-v2_2016-v1', 0)   
+    s = subSample('/pnfs/iihe/cms/store/user/lwezenbe/heavyNeutrino/SingleMuon/crab_Run2016H-17Jul2018-v1_ForJana', 0)   
+    x = s.arrangeFilesInSubjobs()
+    print len(x)
+    for sub in s.listOfSubjobs:
+        total = 0
+        for j in sub:
+            total += s.fileSize(j)
+            print j, s.fileSize(j)        
+        print total
