@@ -1,9 +1,9 @@
 import ROOT, glob, os
-from helpers import getObjFromFile
+from helpers import isValidRootFile, getObjFromFile
 
 class Sample:
 
-    def __init__(self, name, path, output, splitJobs, xsec):
+    def __init__(self, name, path, output, splitJobs, xsec, skipFaultyFiles = False):           #Added last variable due to t2b pnfs problems that took too long to get solved
         self.name               = name
         self.path               = path
         self.isData             = (xsec == 'data')
@@ -13,42 +13,40 @@ class Sample:
         self.Chain              = None
         self.output             = output
         self.singleFile         = self.path.endswith('.root')
-        self.hCount             = None
         self.isSkimmed          = not 'pnfs' in self.path
-    
+     
     def gethCount(self, subPath = None): 
         if subPath is None:             subPath = self.path
         if subPath.endswith('.root'):
-            if not self.isSkimmed:      
-                hCounter                    = getObjFromFile(subPath, 'blackJackAndHookers/hCounter')
-            else:
-                hCounter                    = getObjFromFile(subPath, 'hCounter')
-            self.hCount                     = hCounter.GetEntries()
+            hCounter                    = getObjFromFile(subPath, 'blackJackAndHookers/hCounter')
             return hCounter
         else:
             hCounter = None
             listOfFiles                 = glob.glob(self.path + '/*.root')
-            for f in listOfFiles:
+            print self.path + '/*.root'
+            for i, f in enumerate(listOfFiles):
                 if hCounter is None:     hCounter = self.gethCount(f)
-                else:                    hCounter.Add(self.gethCount(f))
-            self.hCount                 = hCounter.GetEntries() 
-    
-    def initTree(self, branches = None):
-        if not self.isSkimmed:      
-            self.Chain              = ROOT.TChain('blackJackAndHookers/blackJackAndHookersTree')
-        else:      
-            self.Chain              = ROOT.TChain('blackJackAndHookersTree')
+                else:                   hCounter.Add(self.gethCount(f))
+            return hCounter
+ 
+    def initTree(self, branches = None, needhCount=True):
+        self.Chain              = ROOT.TChain('blackJackAndHookers/blackJackAndHookersTree')
         if self.singleFile:
             listOfFiles         = [self.path]
         else:
-            listOfFiles         = glob.glob(self.path + '/*.root')
+            listOfFiles         = sorted(glob.glob(self.path + '/*.root'))
+        
         for f in listOfFiles:
-            self.Chain.Add(f)
-
+            if 'pnfs' in f:
+                f = 'root://maite.iihe.ac.be'+f
+            self.Chain.Add(f)                                                   
+        
         if branches is not None:        self.setSpecificBranches(branches)
 
-        if(self.singleFile and not self.isData):    self.gethCount()
-
+        if not self.isData and needhCount:   
+            hCounter = self.gethCount()
+            self.hCount = hCounter.GetSumOfWeights()
+        
         return self.Chain
 
     def getEventRange(self, subJob):
@@ -65,14 +63,16 @@ def createSampleList(fileName):
     sampleInfos = [line.split('%')[0].strip() for line in open(fileName)]                     # Strip % comments and \n charachters
     sampleInfos = [line.split() for line in sampleInfos if line]                              # Get lines into tuples
     for name, path, output, splitJobs, xsec in sampleInfos:
-        if splitJobs == 'Calc':
-            if path.endswith('.root'):
-                file_info = os.stat(path)
-                file_size = file_info.st_size
-                splitJobs = (file_size/400000000.)+0.5
-            else:
-                splitJobs = (len(glob.glob(path + '/*.root'))/10.)+0.5
-        if int(splitJobs) == 0:       splitJobs = 1
+        try:
+            if splitJobs == 'Calc':
+                if path.endswith('.root'):
+                    file_info = os.stat(path)
+                    file_size = file_info.st_size
+                    splitJobs = round((file_size/500000000.)+0.5)
+                else:
+                    splitJobs = round((len(glob.glob(path + '/*.root'))/5.)+0.5)
+        except:
+            continue
         yield Sample(name, path, output, int(splitJobs), xsec)
 
 def getSampleFromList(sampleList, name):
