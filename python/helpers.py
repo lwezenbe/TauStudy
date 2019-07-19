@@ -9,7 +9,8 @@ import sys
 #
 def isValidRootFile(fname):
   if not os.path.exists(os.path.expandvars(fname)): return False
-  f = ROOT.TFile(fname)
+  if 'pnfs' in fname: fname = 'root://maite.iihe.ac.be'+ fname         #faster for pnfs files + avoids certain unstable problems I had with input/output errors
+  f = ROOT.TFile.Open(fname)
   if not f: return False
   try:
     return not (f.IsZombie() or f.TestBit(ROOT.TFile.kRecovered) or f.GetListOfKeys().IsEmpty())
@@ -20,17 +21,19 @@ def isValidRootFile(fname):
 # Get object (e.g. hist) from file using key, and keep in memory after closing
 #
 def getObjFromFile(fname, hname):
-  assert isValidRootFile(fname)
-  try:
-    f = ROOT.TFile(fname)
-    f.cd()
-    htmp = f.Get(hname)
-    if not htmp: return None
-    ROOT.gDirectory.cd('PyROOT:/')
-    res = htmp.Clone()
-    return res
-  finally:
-    f.Close()
+    assert isValidRootFile(fname)
+
+    if 'pnfs' in fname: fname = 'root://maite.iihe.ac.be'+ fname         #faster for pnfs file
+    try:
+      f = ROOT.TFile.Open(fname)
+      f.cd()
+      htmp = f.Get(hname)
+      if not htmp: return None
+      ROOT.gDirectory.cd('PyROOT:/')
+      res = htmp.Clone()
+      return res
+    finally:
+      f.Close()
 
 def loadtxtCstyle(source):
     arr = loadtxt(source)
@@ -76,3 +79,54 @@ def makePathTimeStamped(path):
 def sortByOtherList(to_sort, base):
     orderedList = [x for _,x in sorted(zip(base,to_sort))]
     return orderedList
+
+#
+#Get all low edges of hist because I dont trust the root function
+#
+def getLowEdges(hist):
+    nbins = hist.GetXaxis().GetNbins()
+    edges = []
+    for b in xrange(nbins):
+        edges.append(hist.GetXaxis().GetBinUpEdge(b))
+    return edges
+
+#
+#Set all negative values to 0 in a hist
+#
+
+def CleanNegativeBins(hist):
+    h = hist.Clone()
+    for b in xrange(h.GetXaxis().GetNbins()):
+        if h.GetBinContent(b+1) < 0:
+            h.SetBinContent(b+1, 0)
+
+    return h
+
+#
+#Write a message to a text file
+#
+def writeMessageToFile(name, destination, message):
+    f = open(destination+'/'+name+'.txt', 'w')
+    f.write(message)
+    f.close()
+
+#
+#Timestamp a folder
+#    
+def timeStampFolder(folder, usefulInfo):
+    timestamp = time.strftime("%Y%m%d_%H%M%S") 
+    makeDirIfNeeded(folder + '/' +timestamp)
+    if usefulInfo:
+        writeMessageToFile('usefulInfo', folder+ '/' + timestamp, usefulInfo)    
+    return folder + '/' +timestamp
+
+#
+#Check whether a string has the timestamp format from above
+#Not entirely watertight but checks whether if you take the '_' out, all you are left with are digits
+#
+
+def isTimeStampFormat(input_string):
+    str_arr = input_string.split('_')
+    if len(str_arr) != 2:       return False
+    if not str_arr[0].isdigit() or not str_arr[1].isdigit():    return False
+    return True
