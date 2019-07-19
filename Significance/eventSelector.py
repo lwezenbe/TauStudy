@@ -10,7 +10,9 @@ class generalEventSelector(object):
         self.nTau = 0
         
         #Old MVA working points
-        self.IsoWorkingPoints = (Chain._lPOGVeto, Chain._lPOGLoose, Chain._lPOGMedium, Chain._lPOGTight, Chain._tauVTightMvaOld)
+        #self.IsoWorkingPoints = (Chain._lPOGVeto, Chain._lPOGLoose, Chain._lPOGMedium, Chain._lPOGTight, Chain._tauVTightMvaOld)
+        #self.IsoWorkingPoints = (Chain._tauPOGVLoose2015, Chain._tauPOGLoose2015,Chain._tauPOGMedium2015,Chain._tauPOGTight2015,Chain._tauPOGVTight2015)
+        self.IsoWorkingPoints = (Chain._deepTauVsJetsVVVLoose[lepton], Chain._deepTauVsJetsVVLoose[lepton], Chain._deepTauVsJetsVLoose[lepton], Chain._deepTauVsJetsLoose[lepton], Chain._deepTauVsJetsMedium[lepton], Chain._deepTauVsJetsTight[lepton], Chain._deepTauVsJetsVTight[lepton], Chain._deepTauVsJetsVVTight[lepton])
         
         #Electron discrimination working points
         self.ElectronWorkingPoints = (None, Chain._tauEleVetoVLoose, Chain._tauEleVetoLoose, Chain._tauEleVetoMedium, Chain._tauEleVetoTight, Chain._tauEleVetoVTight)
@@ -68,7 +70,7 @@ class generalEventSelector(object):
         #Select good leptons and save indices
         lIndex = []
         self.nTau = 0
-        for l in xrange(ord(self.Chain._nL)):
+        for l in xrange(self.Chain._nL):
             if not objSel.isGoodLepton(self.Chain, l):                                  continue
 
             #Tau selection cuts
@@ -101,7 +103,7 @@ class generalEventSelector(object):
 
         #B-tag veto
         contains_B_Jet = False
-        for jet in xrange(ord(self.Chain._nJets)):
+        for jet in xrange(self.Chain._nJets):
             if not objSel.isCleanJet(self.Chain, jet):                                   continue
             if self.Chain._jetCsvV2[jet]  > 0.8484:                                      contains_B_Jet = True
         if contains_B_Jet:                                                               return False

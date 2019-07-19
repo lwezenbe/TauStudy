@@ -11,7 +11,9 @@ ntau = ('singletau', 'ditau')
 
 background_names = ['VV', 'QCD', 'ST', 'TT', 'WJets', 'DYJets']
 #background_names = []
-signal_names = ['TChiWZ', 'TChiSlepSnu_x0p5', 'TChiSlepSnu_x0p05']
+#signal_names = ['TChiWZ', 'TChiSlepSnu_x0p5', 'TChiSlepSnu_x0p05']
+signal_names = ['TChiStauStau', 'TChiSlep_tauEnr_x0p5', 'TChiSlep_tauEnr_x0p05']
+#signal_names = []
 
 def merge_specific_sample(sample_name, number_of_taus):
     
