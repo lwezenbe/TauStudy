@@ -17,7 +17,8 @@ else:
     inData_Str = 'MC'
 
 input_dir = '/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/ClosureTest/Data/'+args.year+'/'+inData_Str
-output_dir = makePathTimeStamped('/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/ClosureTest/Plots')
+#output_dir = makePathTimeStamped('/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/ClosureTest/Plots')
+output_dir = makePathTimeStamped('/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/ClosureTest/'+args.year+'/MC')
 
 sampleNames = [x.rsplit('/', 1)[-1] for x in glob.glob(input_dir+'/*')]
 
