@@ -15,7 +15,6 @@ args = argParser.parse_args()
 
 
 sampleList = createSampleList('/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/Data/inputFiles_'+args.year+'.conf')
-
 makeDirIfNeeded("/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/log")
 
 for sample in sampleList:
@@ -26,3 +25,4 @@ for sample in sampleList:
         command = 'python /storage_mnt/storage/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/main.py --sampleName='+sample.name+ ' --subJob='+str(subJob) + ' --year='+args.year
         if args.inData: command += ' --inData=True'
         sub.launchCream02(command, log, False, 'FakeRate_' + str(subJob))
+

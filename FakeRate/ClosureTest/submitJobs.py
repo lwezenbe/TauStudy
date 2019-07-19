@@ -18,7 +18,7 @@ MCsamples = ['DYJetsToLL_M-50', 'TTJets']
 
 for sample in sampleList:
     if not args.inData:
-        if not MCsamples[0] in sample and not MCsamples[1] in sample: continue
+        if not MCsamples[0] in sample.name and not MCsamples[1] in sample.name: continue
     for subJob in xrange(sample.splitJobs):
         log = "/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/ClosureTest/log/"+sample.name+ "_subjob_"+str(subJob)+".log"
         command = 'python /storage_mnt/storage/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/ClosureTest/closureTest.py --sampleName='+sample.name+ ' --subJob='+str(subJob) + ' --isCheck=' +str(args.isCheck) +' --year='+args.year + ' --inData='+args.inData

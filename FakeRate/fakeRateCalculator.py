@@ -2,15 +2,12 @@ from helpers import getObjFromFile
 
 class fakeRateCalculator():
     
-    INPUT_PATH = '/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/Data/fakeRateDATA2016.root'
-    #INPUT_PATH = '/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/Data/tmp_fakeRateData2016/fakeRateData2016-Data_2016_subJob0.root'
+    #INPUT_PATH = '/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/Data/fakeRateDATA2016.root'
+    INPUT_PATH = '/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/Data'
     
-    #num_file = '/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/DYJets/fakeRate_num.root' 
-    #denom_file = '/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/DYJets/fakeRate_denom.root' 
-    def __init__(self):
-        self.num = getObjFromFile(self.INPUT_PATH, 'fakeRate_num')
-        self.denom = getObjFromFile(self.INPUT_PATH, 'fakeRate_denom')
-
+    def __init__(self, year, inData):
+        self.num = getObjFromFile(self.INPUT_PATH+'/fakeRate'+inData+year+'.root', 'fakeRate_num')
+        self.denom = getObjFromFile(self.INPUT_PATH+'/fakeRate'+inData+year+'.root', 'fakeRate_denom')
 
     def getTightToLoose(self):
         tight_to_loose = self.num.Clone('tightToLoose')
