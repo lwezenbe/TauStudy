@@ -23,9 +23,12 @@ sample = Sample.getSampleFromList(sampleList, args.sampleName)
 Chain = sample.initTree(needhCount=False)
 
 #Define the algorithms and their working points
-tau_id_algos = [('oldMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
-                ('newMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
-                ('cut_based', ['VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight'])]   #If you add more ID's, don't forget to change it in the getTauIDs() function in objectSelection as well
+tau_id_algos = [('oldMVA2015', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('newMVA2015', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('oldMVA2017v2', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('newMVA2017v2', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('cut_based', ['VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight']),
+                ('deeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight'])]   #If you add more ID's, don't forget to change it in the getTauIDs() function in objectSelection as well
 
 #################################################################################################
 #####################################METHOD FUNCTIONS############################################

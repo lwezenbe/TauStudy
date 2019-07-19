@@ -27,8 +27,11 @@ makeDirIfNeeded(basefolder+sample.output+'/'+args.method)
 basefolder = basefolder + sample.output + '/' + args.method
 
 #Define the algorithms and their working points
-tau_id_algos = [('MuonDiscr', ['Loose',  'Tight']),
-                ('ElectronDiscr', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight'])]   #Change getTauLepDiscr() accordingly
+tau_id_algos = [('MuonDiscrMVA', ['Loose',  'Tight']),
+                #('MuonDiscrdeeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight']), 
+                ('MuonDiscrdeeptau', ['VLoose', 'Loose', 'Medium', 'Tight']), 
+                ('ElectronDiscrMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('ElectronDiscrdeeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight'])]   #Change getTauLepDiscr() accordingly
 
 #Whatever needs to be saved at the end
 pt_bins = np.linspace(20, 120, 11)
@@ -75,20 +78,29 @@ for entry in eventrange:
         if not Chain._lPOGLoose[matchindex]:                                             continue
 #        print entry, minDeltaR, Chain._tauGenStatus[matchindex], Chain._tauDecayMode[matchindex], Chain._tauEleVetoLoose[matchindex], Chain._tauMuonVetoLoose[matchindex]
         
-        index = 1-Chain._gen_lFlavor[lep] 
-        roc[index].fill_misid_denominator(Chain._weight)
-        ptHist[index].fill_denominator(Chain._lPt[matchindex], Chain._weight)
-        etaHist[index].fill_denominator(Chain._lEta[matchindex], Chain._weight)
-
         discriminators = objSel.getTauLepDiscr(Chain, matchindex) 
-
-        for j, WP in enumerate(discriminators[index]):
-            if WP:
-                roc[index].fill_misid_numerator(j, Chain._weight)
-                ptHist[index].fill_numerator(Chain._lPt[matchindex], j, Chain._weight)
-                etaHist[index].fill_numerator(Chain._lEta[matchindex], j, Chain._weight)
         
-if not args.isTest:
+        if Chain._gen_lFlavor[lep] == 0:  
+            selected_discriminators = discriminators[2:] #Only electron discr
+            hist_indices = (2, 3)
+        elif Chain._gen_lFlavor[lep] == 1:  
+            selected_discriminators = discriminators[:2] #Only Muon discr
+            hist_indices = (0, 1)
+
+        for i in hist_indices:
+            roc[i].fill_misid_denominator(Chain._weight)
+            ptHist[i].fill_denominator(Chain._lPt[matchindex], Chain._weight)
+            etaHist[i].fill_denominator(Chain._lEta[matchindex], Chain._weight)
+
+        for i, discr in zip(hist_indices, selected_discriminators):
+            for j, WP in enumerate(discr):
+                if WP:
+                    roc[i].fill_misid_numerator(j, Chain._weight)
+                    ptHist[i].fill_numerator(Chain._lPt[matchindex], j, Chain._weight)
+                    etaHist[i].fill_numerator(Chain._lEta[matchindex], j, Chain._weight)
+        
+#if not args.isTest:
+if True:
     #Save
     for i in xrange(len(tau_id_algos)):
         roc[i].write(basefolder, str(args.subJob))

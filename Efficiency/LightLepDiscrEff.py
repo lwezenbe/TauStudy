@@ -29,8 +29,11 @@ makeDirIfNeeded(basefolder+sample.output+'/'+args.method)
 basefolder = basefolder + sample.output + '/' + args.method
 
 #Define the algorithms and their working points
-tau_id_algos = [('MuonDiscr', ['Loose',  'Tight']),
-                ('ElectronDiscr', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight'])]   #Change getTauLepDiscr() accordingly
+tau_id_algos = [('MuonDiscrMVA', ['Loose',  'Tight']),
+                #('MuonDiscrdeeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight']), 
+                ('MuonDiscrdeeptau', ['VLoose', 'Loose', 'Medium', 'Tight']), 
+                ('ElectronDiscrMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('ElectronDiscrdeeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight'])]   #Change getTauLepDiscr() accordingly
 
 #Whatever needs to be saved at the end
 pt_bins = np.linspace(20, 120, 11)

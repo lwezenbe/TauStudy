@@ -7,6 +7,8 @@ from helpers import progress, makeDirIfNeeded, showBranch
 import objectSelection as objSel
 from efficiency import efficiency
 from ROC import ROC
+import eventSelectionTest
+
 
 argParser = argparse.ArgumentParser(description = "Argument parser") 
 argParser.add_argument('--sampleName',  action='store',         default='DYJetsToLL_M-50') 
@@ -23,9 +25,12 @@ print 'Initializing'
 Chain = sample.initTree(needhCount=False)
 
 #Define the algorithms and their working points
-tau_id_algos = [('oldMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
-                ('newMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
-                ('cut_based', ['VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight'])]   #If you add more ID's, don't forget to change it in the getTauIDs() function in objectSelection as well
+tau_id_algos = [('oldMVA2015', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('newMVA2015', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('oldMVA2017v2', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('newMVA2017v2', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                ('cut_based', ['VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight']), 
+                ('deeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight'])]   #If you add more ID's, don't forget to change it in the getTauIDs() function in objectSelection as well
 
 #################################################################################################
 #####################################METHOD FUNCTIONS############################################
@@ -68,6 +73,7 @@ def CalcBlujFakeRate(Chain, sample, args):
     global roc
     global ptHist
     global etaHist
+    global test_NL
  
     for jet in xrange(Chain._nJets):
    
@@ -78,7 +84,7 @@ def CalcBlujFakeRate(Chain, sample, args):
         #Find matching reco tau
         matchindex = objSel.tauMatchIndexIso(Chain, jetVec, needFake=True)
         if matchindex == -1:    continue       
- 
+        
         for i in xrange(len(tau_id_algos)):
             roc[i].fill_misid_denominator(Chain._weight)
             ptHist[i].fill_denominator(Chain._jetPt[jet], Chain._weight)
@@ -87,14 +93,14 @@ def CalcBlujFakeRate(Chain, sample, args):
         DMfinding = objSel.getDMfinding(Chain, matchindex)
         discriminators = objSel.getTauIDs(Chain, matchindex)
 
+        #if DMfinding[0] and 
         for i, discr in enumerate(discriminators):
             if not DMfinding[i]: continue
             for j, WP in enumerate(discr):
                 if WP:
                     roc[i].fill_misid_numerator(j, Chain._weight)
-                    ptHist[i].fill_numerator(Chain._lPt[matchindex], j, Chain._weight)
-                    etaHist[i].fill_numerator(Chain._lEta[matchindex], j, Chain._weight)
-
+                    ptHist[i].fill_numerator(Chain._jetPt[jet], j, Chain._weight)
+                    etaHist[i].fill_numerator(Chain._jetEta[jet], j, Chain._weight)
 
 ###########
 #Main body#
@@ -118,15 +124,22 @@ for tau_id in tau_id_algos:
     ptHist.append(efficiency('pt_fakerate_'+tau_id[0], pt_bins, tau_id[1]))
     etaHist.append(efficiency('eta_fakerate_'+tau_id[0], eta_bins, tau_id[1]))
 
+TEST_NL =  []
+TEST_NL.append(ROOT.TH1D('test_nl_all', 'test_nl_all',25, -2.4, 2.4))
+TEST_NL.append(ROOT.TH1D('test_nl_isfalse', 'test_nl_isfalse',25, -2.4, 2.4))
+TEST_NL.append(ROOT.TH1D('test_nl_isnotfalse', 'test_nl_notisfalse',25, -2.4, 2.4))
+
 #Get range of events in subjob
 if args.isTest:
-    eventRange = xrange(5000)
+    eventRange = xrange(1000000)
 else:
     eventRange = sample.getEventRange(int(args.subJob))
 
 #begin event loop
 for entry in eventRange:
+    progress(entry, len(eventRange))
     Chain.GetEntry(entry)
+    
     if args.method == 'AN':             CalcANFakeRate(Chain, sample, args)
     elif args.method == 'Bluj':         CalcBlujFakeRate(Chain, sample, args)
     else:
@@ -137,8 +150,15 @@ for entry in eventRange:
         print('Please enter proper method argument')
         exit()
 
+output_file = ROOT.TFile('test_nl.root', 'recreate')
+output_file.cd()
+for i in TEST_NL:
+    i.Write()
+output_file.Close()
+
 #save
 if not args.isTest:
+#if True:
     for i in xrange(len(tau_id_algos)):
         roc[i].write(basefolder, str(args.subJob))
         ptHist[i].write(basefolder, str(args.subJob))

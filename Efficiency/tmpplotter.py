@@ -1,9 +1,9 @@
 import ROOT, os
 
 info = []
-#info.append(['Iso', ['Bluj'], ['Bluj']])
-info.append(['LepDiscr', ['AN'], ['AN']])
-info.append(['All', ['Default'], ['Default']])
+info.append(['Iso', ['Bluj'], ['Bluj']])
+#info.append(['LepDiscr', ['AN'], ['AN']])
+#info.append(['All', ['Default'], ['Default']])
 
 for i in info:
     for ef in i[1]:
