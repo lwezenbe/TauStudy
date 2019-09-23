@@ -1,11 +1,11 @@
 import objectSelection
 from ROOT import TLorentzVector
 
-def getLepIndices(Chain, needPromptTau=False):
+def getLepIndices(Chain, isMC, needPromptTau=False):
     
     lIndex = []
     for l in xrange(Chain._nL):
-        if objectSelection.isGoodLightLep(Chain, l):    
+        if objectSelection.isGoodLightLep(Chain, l, isMC):    
             lIndex.append(l)
         elif objectSelection.isLooseTau(Chain, l, needPromptTau):
             lIndex.append(l)
@@ -51,8 +51,8 @@ def getFourVectors(Chain, tauES, lIndices):
 
     for i, l in enumerate(lIndices):
         vec.append(objectSelection.getFourVec(Chain._lPt[l], Chain._lEta[l], Chain._lPhi[l], Chain._lE[l]))
-    #    if Chain._lFlavor[l] == 2:
-    #        vec[i] *= tauES.getES(Chain._tauDecayMode[l])
+        if Chain._lFlavor[l] == 2:
+            vec[i] *= tauES.getES(Chain._tauDecayMode[l])
 
     return vec
 
@@ -77,7 +77,8 @@ def isSSOF(Chain, l1, l2):
     return True
 
 def baseKinCuts(Chain):
-#    if Chain._met < 50: return False
+    if Chain._met < 50: return False
+    #if Chain._met > 50: return False
     
     contains_B_Jet = False
     for jet in xrange(Chain._nJets):
@@ -158,6 +159,11 @@ def fill_two_tau_vars(Chain, lVec):
     var.append(Chain._met)
     var.append(getMll(lVec[1], lVec[2]))
     return var
+
+def passTriggers(Chain):
+    if Chain._passTrigger_e or Chain._passTrigger_ee or Chain._passTrigger_em or Chain._passTrigger_mm or Chain._passTrigger_m or Chain._passTrigger_mt: return True
+    #if Chain._passTrigger_e or Chain._passTrigger_m: return True
+    return False
 
 def isData(f): 
     list_of_datafiles = ['Data_2016', 'Data_2017', 'Data_2018'] 

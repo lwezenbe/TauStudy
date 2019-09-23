@@ -5,22 +5,72 @@ def getFourVec(pt, eta, phi, E):
     vec.SetPtEtaPhiE(pt, eta, phi, E)
     return vec
 
-def isGoodMuon(Chain, lIndex):
-    if Chain._lFlavor[lIndex] != 1:     return False
-    elif not Chain._lEwkTight[lIndex]:  return False
-    return True
+def lepHasOverlap(Chain, index):
 
-def isGoodElectron(Chain, lIndex):
-    if Chain._lFlavor[lIndex] != 0:     return False
-    elif not Chain._lEwkTight[lIndex]:  return False
-    return True
+    order_of_flavors = [1, 0, 2]
+    #Check the flavor of the lepton and initialize variables
+    inputVec = TLorentzVector()
+    inputVec.SetPtEtaPhiE(Chain._lPt[index], Chain._lEta[index], Chain._lPhi[index], Chain._lE[index])
 
-def isGoodLightLep(Chain, lIndex):
-    #if not isGoodMuon(Chain, lIndex) and not isGoodElectron(Chain, lIndex):      return False
-    if Chain._lFlavor[lIndex] == 2:       return False
-    if not Chain._lEwkTight[lIndex]:      return False
-    #if not Chain._lIsPrompt[lIndex]:      return False
-    return True
+    #Loop over all leptons with a different flavor
+    for l in xrange(Chain._nL):
+        if l == index or Chain._lFlavor[l] in order_of_flavors[order_of_flavors.index(Chain._lFlavor[index]):]:            continue
+        if not isLooseLightLeptonEwkino(Chain, l):                                             continue
+
+        lVec = TLorentzVector()
+        lVec.SetPtEtaPhiE(Chain._lPt[l], Chain._lEta[l], Chain._lPhi[l], Chain._lE[l])
+
+        dR = inputVec.DeltaR(lVec)
+        if dR < .4:         return True
+
+    return False
+
+def isEwkLooseMuon(Chain, index):
+    if(abs(Chain._dxy[index])>= 0.05 or abs(Chain._dz[index])>= 0.1 or Chain._3dIPSig[index] >= 8): return False    
+    if Chain._miniIso[index] >= 0.4:    return False
+    if Chain._lPt[index] <= 5 or abs(Chain._lEta[index]) >= 2.4:       return False
+    return True #isLooseMuon From heavyNeutrino already included in basic muon cuts
+
+def isEwkFOMuon(Chain, index):
+    if not isEwkLooseMuon(Chain, index):       return False
+    if Chain._lPt[index] <= 10:       return False
+    return Chain._leptonMvaTTH[index] > -0.2 or (Chain._ptRatio[index] > 0.3 and Chain._closestJetCsvV2[index] < 0.3);
+
+def isEwkTightMuon(Chain, index):
+    if not isEwkFOMuon(Chain, index):       return False
+    return Chain._leptonMvaTTH[index] > -0.2
+
+def isEwkLooseElectron(Chain, index):
+    if(abs(Chain._dxy[index])>= 0.05 or abs(Chain._dz[index])>= 0.1 or Chain._3dIPSig[index] >= 8): return False    
+    if Chain._miniIso[index] >= 0.4:    return False
+    if Chain._lPt[index] <= 7 or abs(Chain._lEta[index]) >= 2.5:       return False
+    if Chain._lElectronMissingHits[index] > 1: return False
+    if lepHasOverlap(Chain, index): return False
+    return True #isLooseMuon From heavyNeutrino already included in basic muon cuts
+
+def isEwkFOElectron(Chain, index):
+    if not isEwkLooseElectron(Chain, index):       return False
+    if Chain._lPt[index] <= 10:       return False
+    if Chain._lElectronMissingHits[index] != 0: return False
+    return Chain._leptonMvaTTH[index] > 0.5 or Chain._ptRatio[index] > 0.3 and Chain._closestJetCsvV2[index] < 0.3;
+
+def isEwkTightElectron(Chain, index):
+    if not isEwkFOElectron(Chain, index):       return False
+    if not Chain._lElectronPassConvVeto[index]:       return False
+    return Chain._leptonMvaTTH[index] > 0.5;
+
+def isLooseLightLeptonEwkino(Chain, index):
+    if Chain._lFlavor[index] == 0:              return isEwkLooseElectron(Chain, index) 
+    elif Chain._lFlavor[index] == 1:              return isEwkLooseMuon(Chain, index) 
+    elif Chain._lFlavor[index] == 2:              return False
+    return False
+
+def isGoodLightLep(Chain, index, isMC):
+    if isMC and not Chain._lIsPrompt[index]:    return False
+    if Chain._lFlavor[index] == 0:              return isEwkTightElectron(Chain, index) 
+    elif Chain._lFlavor[index] == 1:              return isEwkTightMuon(Chain, index) 
+    elif Chain._lFlavor[index] == 2:              return False
+    return False
     
 def tauHasOverlap(Chain, index): 
  
@@ -31,7 +81,7 @@ def tauHasOverlap(Chain, index):
     #Loop over all leptons with a different flavor and a different index 
     for l in xrange(Chain._nLight): 
         if l == index or Chain._lFlavor[l] == Chain._lFlavor[index]:            continue 
-        if not Chain._lEwkLoose[l]:                                             continue 
+        if not isLooseLightLeptonEwkino(Chain, l):                                             continue 
  
         lVec = TLorentzVector() 
         lVec.SetPtEtaPhiE(Chain._lPt[l], Chain._lEta[l], Chain._lPhi[l], Chain._lE[l]) 

@@ -67,6 +67,8 @@ if not args.inData:
 else:
     categories = ['inData']
 
+print sample.hCount
+
 #Initialize histograms
 from histogram import histogram
 hist = []
@@ -74,10 +76,22 @@ hist = []
 for cat in categories:
     tmp = []
     if not args.isCheck:                        #This is done both if inData and not
-        tmp.append(histogram(cat+ '_ptTau', (20, 20., 90.), output_dir))
-        tmp.append(histogram(cat+ '_etaTau', (10, -2.5, 2.5), output_dir))
-        tmp.append(histogram(cat+ '_met', (30, 0., 300.), output_dir))
-        tmp.append(histogram(cat+ '_Mll', (15, 75., 105.), output_dir))
+        if cat == "inData":
+            tmp.append(histogram(cat+ '_ptTau', (20, 20., 90.), output_dir))
+            tmp.append(histogram(cat+ '_etaTau', (10, -2.5, 2.5), output_dir))
+            tmp.append(histogram(cat+ '_met', (10, 0., 100.), output_dir))
+            tmp.append(histogram(cat+ '_Mll', (15, 75., 105.), output_dir))
+        elif cat == "Categ_C":
+            tmp.append(histogram(cat+ '_ptTau', (20, 20., 90.), output_dir))
+            tmp.append(histogram(cat+ '_etaTau', (10, -2.5, 2.5), output_dir))
+            tmp.append(histogram(cat+ '_met', (10, 0., 100.), output_dir))
+            tmp.append(histogram(cat+ '_Mll', (20, 65., 115.), output_dir))
+        else:
+            tmp.append(histogram(cat+ '_ptTau', (10, 20., 90.), output_dir))
+            tmp.append(histogram(cat+ '_etaTau', (10, -2.5, 2.5), output_dir))
+            tmp.append(histogram(cat+ '_met', (5, 0., 100.), output_dir))
+            tmp.append(histogram(cat+ '_Mll', (15, 25., 130.), output_dir))
+            
     else:
         tmp.append(histogram(cat+ '_ptTau', np.array([20., 25., 35., 50., 70., 100.]), output_dir, customBins=True))
         tmp.append(histogram(cat+ '_etaTau', np.array([0., 0.5, 1., 1.5, 2., 2.5]), output_dir, customBins=True))
@@ -97,8 +111,9 @@ for entry in eventRange:
     progress(entry-eventRange[0], len(eventRange))
     Chain.GetEntry(entry)
 
-    lIndex = eventSelection.getLepIndices(Chain, needPromptTau)
+    if not eventSelection.passTriggers(Chain): continue
 
+    lIndex = eventSelection.getLepIndices(Chain, not isData, needPromptTau)
     if len(lIndex) != 3: continue
 
     nLooseTau = eventSelection.numberOfTaus(Chain, lIndex)
@@ -110,15 +125,19 @@ for entry in eventRange:
     if not args.inData:
         if not args.isCheck:
             if eventSelection.passedCategC(Chain, lIndex, nLooseTau, nTightTau):
+   #             print 'C'
                 category = 0
                 var = eventSelection.fill_single_tau_vars(Chain, lVec)
             elif eventSelection.passedCategD(Chain, lIndex, nLooseTau, nTightTau):
+      #          print 'D'
                 category = 1
                 var = eventSelection.fill_single_tau_vars(Chain, lVec)
             elif eventSelection.passedCategE(Chain, lIndex, nLooseTau, nTightTau):
+     #           print 'E'
                 category = 2
                 var = eventSelection.fill_single_tau_vars(Chain, lVec)
             elif eventSelection.passedCategF(Chain, lIndex, nLooseTau, nTightTau):
+    #            print 'F'
                 category = 3
                 var = eventSelection.fill_two_tau_vars(Chain, lVec)
             else:
@@ -131,6 +150,19 @@ for entry in eventRange:
     else:
         if not eventSelection.passedControlRegion(Chain, lIndex, nLooseTau, lVec):      continue
         var = eventSelection.fill_single_tau_vars(Chain, lVec)
+
+    #if (var[3] > 75 or var[3] < 50) and category == 0 :
+#   if var[3] < 75 and category == 0 :
+#        test += 1
+#        print var[3]
+#        print Chain._lFlavor[lIndex[0]], Chain._lFlavor[lIndex[1]], Chain._lFlavor[lIndex[2]]
+#        print Chain._tauGenStatus[lIndex[0]], Chain._tauGenStatus[lIndex[1]], Chain._tauGenStatus[lIndex[2]]
+#        print Chain._lPt[lIndex[0]], Chain._lPt[lIndex[1]]
+#        print Chain._lEta[lIndex[0]], Chain._lEta[lIndex[1]]
+#        print Chain._lMomPdgId[lIndex[0]], Chain._lMomPdgId[lIndex[1]], Chain._lMomPdgId[lIndex[2]]
+#        print Chain._lPt[lIndex[2]], Chain._lEta[lIndex[2]], Chain._lPhi[lIndex[2]]
+#        if abs(Chain._lMomPdgId[lIndex[0]]) != 23 or  Chain._lMomPdgId[lIndex[1]] != 23:
+#            test2 += 1
 
     fake_factor = FR.getFakeWeight(Chain, lVec, lIndex, nLooseTau)
 
@@ -152,7 +184,11 @@ for entry in eventRange:
         else:
             h.fill(v, weightfactor, fake_factor)
 
-print hist[0][0].get_histogram().GetSumOfWeights()
+#for categ_hists in hist:
+#    for h in categ_hists:
+#        print h.get_histogram().GetSumOfWeights()
+#        print h.get_histogram().GetEntries()
+
 
 if not args.isTest:
     for h in hist:

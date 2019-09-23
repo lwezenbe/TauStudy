@@ -29,6 +29,7 @@ else:
 
 print sampleNames
 for sample in sampleNames:
+    if sample == "DYJets": continue
     for var in varNames:
         for categ in categNames:
             os.system('hadd -f ' + input_dir + '/'+ sample +'/' +categ+'_' + var + '.root ' + input_dir + '/'+ sample +'/*_'+categ+'_' + var + '.root')        
