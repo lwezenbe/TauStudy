@@ -37,9 +37,9 @@ for var in varNames:
             predicted.append(tmp_pred)
             legendNames.append(sample)
     predicted.append(store_data_observed)
-    legendNames.append('nonprompt')
+    legendNames.append('Nonprompt prediction')
     
-    plt.plotDataVSMC(observed, predicted, xtitle_map[var], legendNames, 'Data',  output_dir+'/'+var, ytitle_bottom = 'Measured/pred.')
+    plt.plotDataVSMC(observed, predicted, xtitle_map[var], legendNames, 'Observation',  output_dir+'/'+var, ytitle_bottom = 'Measured/pred.')
     
 
 

@@ -10,16 +10,17 @@ args = argParser.parse_args()
 
 xtitle_map = {'ptTau': 'P_{T}(#tau) [GeV]', 'etaTau': '#eta(#tau)', 'Mll': 'M(ll) [GeV]', 'met':'E_{T}^{miss} [GeV]'}
 ytitle_map = {'ptTau': 'Taus', 'etaTau': 'Taus', 'Mll': 'Events', 'met':'Events'}
-log_map = {'ptTau': False, 'etaTau': False, 'Mll': True, 'met':True}
-categ_map = {'Categ_C': 'C: OSSF + #tau', 'Categ_D': 'D: OSOF + #tau', 'Categ_E': 'E: SS + #tau' , 'Categ_F':'F: e/#mu + #tau#tau'}
+log_map = {'ptTau': False, 'etaTau': False, 'Mll': False, 'met':False}
+categ_map = {'Categ_C': 'C: OSSF + #tau', 'Categ_D': 'D: OSOF + #tau', 'Categ_E': 'E: SS + #tau' , 'Categ_F':'F: e/#mu + #tau#tau', 'Check': 'FR measurement region'}
 
 makeDirIfNeeded(args.output_dir+'/'+args.sample)
-file_paths = glob.glob(args.input_dir + '/' + args.sample + '/Categ*.root')
+file_paths = glob.glob(args.input_dir + '/' + args.sample + '/*.root')
 
 for f in file_paths:
     print f
     h_name = f.rsplit('/', 1)[1]
     h_name = h_name.split('.')[0]
+    print h_name
     split_names = h_name.rsplit('_', 1) 
     categ_name = split_names[0]
     var_name = split_names[1]
