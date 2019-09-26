@@ -1,6 +1,6 @@
 import plottingTools as plt
 import fakeRateCalculator
-from helpers import makeDirIfNeeded
+from helpers import makeDirIfNeeded, makePathTimeStamped
 
 #Parse arguments
 import argparse
@@ -16,14 +16,16 @@ if args.inData:
 else:
     indata_str = 'MC'
 
-output_str = '/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/Plots/'+indata_str+args.year+'/tightToLoose'
+output_dir = '/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/Plots/'+indata_str+args.year
 
 
 makeDirIfNeeded('/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/Plots')
 makeDirIfNeeded('/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/Plots/'+indata_str+args.year)
-
+makePathTimeStamped(output_dir)
 
 FR = fakeRateCalculator.fakeRateCalculator(args.year, indata_str)
 tightToLoose = FR.getTightToLoose()
+
+output_str = output_dir+'/tightToLoose'
 
 plt.draw2DHist(tightToLoose, 'p_{T} [GeV]', '|#eta|', output_str)

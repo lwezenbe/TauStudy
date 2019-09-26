@@ -24,10 +24,11 @@ sample = Sample.getSampleFromList(sampleList, args.sampleName)
 import eventSelection
 isData = eventSelection.isData(args.sampleName)
 
-#Look if we're dealing with a prompt substraction sample
+#Look if we're dealing with a prompt subtraction sample
 forPromptSubtraction = False
 if args.inData and not isData:  forPromptSubtraction = True
 
+#Create a fakeRate object
 import fakeRate
 inData_str = None
 if args.inData: inData_str = 'DATA'
@@ -35,7 +36,6 @@ else: inData_str = 'MC'
 FR = fakeRate.fakeRate('fakeRate'+inData_str+args.year+'-'+args.sampleName+'_subJob' + str(args.subJob))
 
 #import classes to reweight
-
 from tauEnergyScale import tauEnergyScale
 tauES = tauEnergyScale(args.year)
 
@@ -53,7 +53,6 @@ if args.isTest:
     eventRange = xrange(30000)
 else:
     eventRange = sample.getEventRange(int(args.subJob))
-    print len(eventRange)
 
 import objectSelection
 from helpers import progress, makeDirIfNeeded
@@ -63,10 +62,14 @@ for entry in eventRange:
     progress(entry - eventRange[0], len(eventRange))
     Chain.GetEntry(entry)
     
+    if not eventSelection.passTriggers(Chain):      continue
+    
     tau_index = eventSelection.isGoodBaseEvent(Chain, needPromptTau=forPromptSubtraction)
     if tau_index == -1: continue
 
-    if not eventSelection.passTriggers(Chain):      continue
+    #test
+    if not forPromptSubtraction:
+        if Chain._tauGenStatus[tau_index] != 6: continue
 
     tau_FV = objectSelection.getFourVec(Chain._lPt[tau_index], Chain._lEta[tau_index], Chain._lPhi[tau_index], Chain._lE[tau_index])
     tau_FV *= tauES.getES(Chain._tauDecayMode[tau_index])
@@ -83,13 +86,11 @@ for entry in eventRange:
         weightfactor[0] *= tauSF.getSF(args.year, 'Tight')[0]
         weightfactor[1] *= tauSF.getSF(args.year, 'VLoose')[0]
     
-    print weightfactor
     #Fill Fake Rate
     FR.fill_denominator((tau_FV.Pt(), abs(tau_FV.Eta())), weightfactor[1])
     if forPromptSubtraction: 
         FR.fill_numerator((tau_FV.Pt(), abs(tau_FV.Eta())), weightfactor[0])
-    else:
-        if objectSelection.isTightTau(Chain, tau_index):            
+    elif objectSelection.isTightTau(Chain, tau_index):            
             FR.fill_numerator((tau_FV.Pt(), abs(tau_FV.Eta())), weightfactor[0])
 
 #if not args.isTest:
