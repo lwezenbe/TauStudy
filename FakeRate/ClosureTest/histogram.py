@@ -17,11 +17,9 @@ class histogram():
 
     def fill_histogram(self, value, weight):
         self.hist.Fill(min(max(self.hist.GetXaxis().GetBinCenter(1), value), self.hist.GetXaxis().GetBinCenter(self.hist.GetXaxis().GetLast())), weight)
-        #self.hist.Fill(value, weight)
 
     def fill_sideband(self, value, weight, sideBandFactor):
-        self.sideBand.Fill(min(max(self.hist.GetXaxis().GetBinCenter(1), value), self.hist.GetXaxis().GetBinCenter(self.hist.GetXaxis().GetLast())), weight*sideBandFactor)
-        #self.sideBand.Fill(value, weight*sideBandFactor)
+        self.sideBand.Fill(min(max(self.sideBand.GetXaxis().GetBinCenter(1), value), self.sideBand.GetXaxis().GetBinCenter(self.sideBand.GetXaxis().GetLast())), weight*sideBandFactor)
 
     def fill(self, value, weight, fakeFactor):
         if fakeFactor == -999.:

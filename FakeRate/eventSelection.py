@@ -39,6 +39,5 @@ def isData(f):
     
 def passTriggers(Chain):
     if Chain._passTrigger_e or Chain._passTrigger_ee or Chain._passTrigger_em or Chain._passTrigger_mm or Chain._passTrigger_m or Chain._passTrigger_mt or Chain._passTrigger_et: return True
-    #if Chain._passTrigger_e or Chain._passTrigger_m: return True
     return False
             

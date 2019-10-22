@@ -26,10 +26,15 @@ def numberOfTightTaus(Chain, lIndices):
             nTaus += 1
     return nTaus
 
+#
+#Function used for closure tests in MC to see if the event has the correct number of fakes
+#
 def isCorrectNumberOfFakes(Chain, lIndices, nLooseTau, nTightTau):
+    #If only one tau, required to be fake
     if nLooseTau == 1:
         if not objectSelection.isFakeTau(Chain, lIndices[2]):        return False
     
+    #If two taus, split up according to how many tight
     elif nLooseTau == 2:
         if nTightTau == 0:
             if not objectSelection.isFakeTau(Chain, lIndices[1]):        return False
@@ -78,13 +83,13 @@ def isSSOF(Chain, l1, l2):
 
 def baseKinCuts(Chain):
     if Chain._met < 50: return False
-    #if Chain._met > 50: return False
     
     contains_B_Jet = False
     for jet in xrange(Chain._nJets):
-        if not objectSelection.isCleanJet(Chain, jet):                                   continue
-        if Chain._jetCsvV2[jet]  > 0.8484:                                      contains_B_Jet = True
+        if not objectSelection.isCleanJet(Chain, jet):                                  continue
+        if (Chain._jetDeepCsv_b[jet] + Chain._jetDeepCsv_bb[jet]) > 0.2219:   contains_B_Jet = True
     if contains_B_Jet:                                                               return False
+    
     
     return True    
 
@@ -93,6 +98,7 @@ def passedCategC(Chain, lIndices, nLooseTau, nTightTau):
     if nLooseTau != 1:                   return False
     if not isCorrectNumberOfFakes(Chain, lIndices, nLooseTau, nTightTau):       return False
     if not isOSSF(Chain, lIndices[0], lIndices[1]):     return False
+ 
     return True
 
 def passedCategD(Chain, lIndices, nLooseTau, nTightTau):
@@ -109,6 +115,7 @@ def passedCategE(Chain, lIndices, nLooseTau, nTightTau):
     #At this point the first two leptons are light flavored since taus are filled last
     if not isCorrectNumberOfFakes(Chain, lIndices, nLooseTau, nTightTau):       return False
     if not isSSOF(Chain, lIndices[0], lIndices[1]) or not isSSSF(Chain, lIndices[0], lIndices[1]):     return False
+    
     return True
 
 def passedCategF(Chain, lIndices, nLooseTau, nTightTau):
@@ -132,11 +139,8 @@ def passedControlRegion(Chain, lIndices, nTau, lVec):
     
     if Chain._met < 50:         return False
 
-    l1 = TLorentzVector()
-    l2 = TLorentzVector()
-
-    l1.SetPtEtaPhiE(Chain._lPt[lIndices[0]], Chain._lEta[lIndices[0]], Chain._lPhi[lIndices[0]], Chain._lE[lIndices[0]])
-    l2.SetPtEtaPhiE(Chain._lPt[lIndices[1]], Chain._lEta[lIndices[1]], Chain._lPhi[lIndices[1]], Chain._lE[lIndices[1]])
+    l1 = objectSelection.getFourVec(Chain._lPt[lIndices[0]], Chain._lEta[lIndices[0]], Chain._lPhi[lIndices[0]], Chain._lE[lIndices[0]]
+    l2 = objectSelection.getFourVec(Chain._lPt[lIndices[1]], Chain._lEta[lIndices[1]], Chain._lPhi[lIndices[1]], Chain._lE[lIndices[1]])
     if abs((l1+l2).M()-91.19) > 15:     return False
 
     return True
@@ -161,8 +165,7 @@ def fill_two_tau_vars(Chain, lVec):
     return var
 
 def passTriggers(Chain):
-    if Chain._passTrigger_e or Chain._passTrigger_ee or Chain._passTrigger_em or Chain._passTrigger_mm or Chain._passTrigger_m or Chain._passTrigger_mt: return True
-    #if Chain._passTrigger_e or Chain._passTrigger_m: return True
+    if Chain._passTrigger_e or Chain._passTrigger_ee or Chain._passTrigger_em or Chain._passTrigger_mm or Chain._passTrigger_m or Chain._passTrigger_mt or Chain._passTrigger_et: return True
     return False
 
 def isData(f): 

@@ -18,7 +18,7 @@ sampleNames = [x.rsplit('/', 1)[-1] for x in glob.glob(input_dir+'/*')]
 varNames = ['ptTau', 'etaTau', 'Mll', 'met']
 xtitle_map = {'ptTau': 'P_{T}(#tau) [GeV]', 'etaTau': '#eta(#tau)', 'Mll': 'M(ll) [GeV]', 'met':'E_{T}^{miss} [GeV]'}
 ytitle_map = {'ptTau': 'Taus', 'etaTau': 'Taus', 'Mll': 'Events', 'met':'Events'}
-log_map = {'ptTau': False, 'etaTau': False, 'Mll': True, 'met':True}
+log_map = {'ptTau': False, 'etaTau': True, 'Mll': True, 'met':True}
 
 for var in varNames:
     predicted = []
