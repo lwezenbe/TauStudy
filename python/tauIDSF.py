@@ -2,6 +2,7 @@ import ROOT
 
 class tauIDSF():
 
+						#val, err
     TAU_ID_SF = {('2016', 'VVLoose')    :       (0.9, 0.03),
                 ('2016', 'VLoose')      :       (0.9, 0.03), 
                 ('2016', 'Loose')       :       (0.86, 0.02), 

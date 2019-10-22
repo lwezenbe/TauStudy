@@ -30,12 +30,15 @@ def GetStackColorTauPOG(index):
     if index == 5:      return "#ffcc66"
 
 def GetStackColorTauPOGbyName(name):
-    if 'VV' in name:            return "#18252a"
-    elif 'TT' in name:          return "#de5a6a"
+    if 'VVV' in name:           return "#87F1FF"
+    elif 'TT' in name:            return "#18252a"
+    elif 'VV' in name:          return "#de5a6a"
     elif 'ST' in name:          return "#9999cc"
     elif 'WJets' in name:       return "#4496c8"
     elif 'QCD' in name:         return "#e5b7e5"
     elif 'DY' in name:          return "#ffcc66"
+#    elif 'H' in name:           return "#87F1FF"
+    else:                       return "#F4F1BB"
 
 def GetHistColor(index):        
     if index == 0:      return "#000000"
@@ -181,11 +184,16 @@ def getUnit(x):
 def savePlots(Canv, destination):
     destination_components = destination.split('/')
     cleaned_components = [x for x in destination_components if not isTimeStampFormat(x)]
-    index_for_php = cleaned_components.index('Results')
-    php_destination = '/user/lwezenbe/public_html/'
-    php_destination += '/'.join(cleaned_components[index_for_php+1:])
-    makeDirIfNeeded(php_destination.rsplit('/', 1)[0])    
-    os.system('cp -rf /user/lwezenbe/private/PhD/index.php '+ php_destination.rsplit('/', 1)[0]+'/index.php')    
+    try:
+        index_for_php = cleaned_components.index('Results')
+    except:
+        index_for_php = None
+
+    if index_for_php:
+        php_destination = '/user/lwezenbe/public_html/'
+        php_destination += '/'.join(cleaned_components[index_for_php+1:])
+        makeDirIfNeeded(php_destination.rsplit('/', 1)[0])    
+        os.system('cp -rf /user/lwezenbe/private/PhD/index.php '+ php_destination.rsplit('/', 1)[0]+'/index.php')    
 
     print destination
 
@@ -193,19 +201,23 @@ def savePlots(Canv, destination):
     Canv.SaveAs(destination + ".png")
     Canv.SaveAs(destination + ".root")
 
-    Canv.SaveAs(php_destination + ".pdf")
-    Canv.SaveAs(php_destination + ".png")
-    Canv.SaveAs(php_destination + ".root")
+    #Clean out the php directory you want to write to if it is already filled, otherwise things go wrong with updating the file on the website
+    #os.system("rm "+php_destination.rsplit('/')[0]+"/*")
 
-def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, ytitle_bottom = 'Data/MC'):
+    if index_for_php:
+        Canv.SaveAs(php_destination + ".pdf")
+        Canv.SaveAs(php_destination + ".png")
+        Canv.SaveAs(php_destination + ".root")
+
+def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, ytitle_bottom = 'Data/MC', ylog=False):
     GeneralSettings()
     
     Canv = TCanvas("Canv"+destination, "Canv"+destination, 1000, 1000)
     
     #Set Histogram Styles
-    for h in MCHist :
-        h.SetFillColor(TColor.GetColor(GetStackColorTauPOG(MCHist.index(h)))) 
-        h.SetLineColor(TColor.GetColor(GetStackColorTauPOG(MCHist.index(h))))
+    for i, h in enumerate(MCHist) :
+        h.SetFillColor(TColor.GetColor(GetStackColorTauPOGbyName(legendNames[i]))) 
+        h.SetLineColor(TColor.GetColor(GetStackColorTauPOGbyName(legendNames[i])))
     
     DataHist.SetMarkerColor(ROOT.kBlack)
     DataHist.SetLineColor(ROOT.kBlack)    
@@ -218,11 +230,27 @@ def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, y
     DataOverMC = DataHist.Clone("DataOverMC")
     DataOverMC.Divide(totBkgr)
 
+    #Errors
+    predStatError = totBkgr.Clone("PredictedStatError")
+    predSystError = totBkgr.Clone("PredictedSystError")
+    predTotError = totBkgr.Clone("PredictedTotalError")
+    for b in xrange(predSystError.GetNbinsX()+1):
+        predSystError.SetBinError(b, 0.3*totBkgr.GetBinContent(b))
+        syst = predSystError.GetBinError(b)
+        stat = predStatError.GetBinError(b)
+        predTotError.SetBinError(b, np.sqrt(stat*stat+syst*syst))
+
+    #predTotError.SetFillStyle(3013)
+    #predTotError.SetFillColor(ROOT.kGray+2)
+    #predTotError.SetMarkerStyle(0)
+    #predTotError.Draw("E2 Same")
+
     #First pad
     plotpad = TPad("plotpad", "plotpad", 0, .3, 1, 0.98)
     plotpad.SetBottomMargin(0.025)
     plotpad.Draw()
     plotpad.cd()
+
 
     #Create Stack (Change with most logical ordering)
     hs = THStack("hs", "hs")
@@ -238,9 +266,20 @@ def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, y
     #Set range
     overallMin = GetOverallMinimum(MCHist+[DataHist])
     overallMax = GetOverallMaximum([totBkgr]+[DataHist])
-    hs.SetMinimum(0.5*overallMin)    
-    hs.SetMaximum(1.2*overallMax)    
+    if ylog:
+        plotpad.SetLogy()
+        hs.SetMinimum(0.3*overallMin)
+        hs.SetMaximum(10*overallMax)
+    else:
+        hs.SetMinimum(0.5*overallMin)
+        hs.SetMaximum(1.7*overallMax)
+
     DataHist.Draw("EPSame")
+
+    predTotError.SetFillStyle(3013)
+    predTotError.SetFillColor(ROOT.kGray+2)
+    predTotError.SetMarkerStyle(0)
+    predTotError.Draw("E2 Same")
      
     #Create Legend
     legend = TLegend(0.7, .7, .9, .9)
@@ -262,6 +301,23 @@ def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, y
     ratiopad.Draw()
     ratiopad.cd()
     
+    #Errors
+    StatErrorRatio = predStatError.Clone("StatErrorRatio")
+    StatErrorRatio.SetFillStyle(1001)
+    StatErrorRatio.SetFillColor(TColor.GetColor('#6EF9F5'))
+    TotErrorRatio = predTotError.Clone("SystErrorRatio")
+    TotErrorRatio.SetFillColor(TColor.GetColor('#63E2C6'))
+    TotErrorRatio.SetFillStyle(1001)
+    for b in xrange(StatErrorRatio.GetNbinsX()+1):
+        if(StatErrorRatio.GetBinContent(b) != 0):
+            StatErrorRatio.SetBinError(b, StatErrorRatio.GetBinError(b)/StatErrorRatio.GetBinContent(b))
+            TotErrorRatio.SetBinError(b, TotErrorRatio.GetBinError(b)/TotErrorRatio.GetBinContent(b))
+            StatErrorRatio.SetBinContent(b, 1.)
+            TotErrorRatio.SetBinContent(b, 1.)
+        else:
+            StatErrorRatio.SetBinContent(b, 0)
+            TotErrorRatio.SetBinContent(b, 0)
+    
     #Set Style for bottom plot
     DataOverMC.SetTitle(";" + xtitle + "; "+ytitle_bottom)
     DataOverMC.GetXaxis().SetTitleSize(.12)
@@ -269,9 +325,12 @@ def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, y
     DataOverMC.GetYaxis().SetTitleOffset(.6)
     DataOverMC.GetXaxis().SetLabelSize(.12)
     DataOverMC.GetYaxis().SetLabelSize(.12)
-    DataOverMC.SetMinimum(0.6)
-    DataOverMC.SetMaximum(1.4)
+    DataOverMC.SetMinimum(0.3)
+    DataOverMC.SetMaximum(1.7)
     DataOverMC.Draw("EP")
+    TotErrorRatio.Draw("E2 same")
+    StatErrorRatio.Draw("E2 same")
+    DataOverMC.Draw("EPsame")
 
     #Draw a guide for the eye
     line = TLine(DataOverMC.GetXaxis().GetXmin(),1,DataOverMC.GetXaxis().GetXmax(),1)
@@ -279,6 +338,17 @@ def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, y
     line.SetLineWidth(1)
     line.SetLineStyle(1)
     line.Draw("Same")
+
+    #Create Legend
+    legend_bottom = TLegend(0.2, .8, .9, .9)
+    legend_bottom.SetNColumns(3)
+    legend_bottom.AddEntry(DataOverMC, "Obs./Pred.")  
+    legend_bottom.AddEntry(StatErrorRatio, "Stat. Unc.")  
+    legend_bottom.AddEntry(TotErrorRatio, "Tot. Unc.")  
+    legend_bottom.SetFillStyle(0)
+    legend_bottom.SetBorderSize(0)
+
+    legend_bottom.Draw()
    
     #Throw CMs lumi at it
     cl.CMS_lumi(Canv, 4, 11, 'Preliminary', True)
@@ -306,10 +376,25 @@ def plotClosure(observed, predicted, xtitle, ytitle, DataName, additionalInfo, d
     plotpad.Draw()
     plotpad.cd()
 
-    predicted.Draw("EHist")                                                            #Draw before using GetHistogram, see https://root-forum.cern.ch/t/thstack-gethistogram-null-pointer-error/12892/4
+    predicted.Draw("Hist")                                                            #Draw before using GetHistogram, see https://root-forum.cern.ch/t/thstack-gethistogram-null-pointer-error/12892/4
     title = " ; ; "+ytitle+" / " +str(predicted.GetBinWidth(1)) +' '+ getUnit(xtitle)
     predicted.SetTitle(title)
     predicted.GetXaxis().SetLabelOffset(9999999)
+    
+    predStatError = predicted.Clone("PredictedStatError")
+    predSystError = predicted.Clone("PredictedSystError")
+    predTotError = predicted.Clone("PredictedTotalError")
+    for b in xrange(predSystError.GetNbinsX()+1):
+        predSystError.SetBinError(b, 0.3*predicted.GetBinContent(b))
+        syst = predSystError.GetBinError(b)
+        stat = predStatError.GetBinError(b)
+#        print syst, stat, np.sqrt(stat*stat+syst*syst)
+        predTotError.SetBinError(b, np.sqrt(stat*stat+syst*syst))
+
+    predTotError.SetFillStyle(3013)
+    predTotError.SetFillColor(ROOT.kGray+2)
+    predTotError.SetMarkerStyle(0)
+    predTotError.Draw("E2 Same")
 
     #Set range
     overallMin = GetOverallMinimum([observed, predicted], yLog)
@@ -321,7 +406,7 @@ def plotClosure(observed, predicted, xtitle, ytitle, DataName, additionalInfo, d
         predicted.SetMaximum(10*overallMax)    
     else:
         predicted.SetMinimum(0.5*overallMin)    
-        predicted.SetMaximum(1.2*overallMax)    
+        predicted.SetMaximum(1.7*overallMax)    
     observed.Draw("EPSame")
      
     #Create Legend
@@ -349,6 +434,22 @@ def plotClosure(observed, predicted, xtitle, ytitle, DataName, additionalInfo, d
     ratio = observed.Clone('ratio')
     ratio.Divide(predicted)
 
+    StatErrorRatio = predStatError.Clone("StatErrorRatio")
+    StatErrorRatio.SetFillStyle(1001)
+    StatErrorRatio.SetFillColor(TColor.GetColor('#6EF9F5'))
+    TotErrorRatio = predTotError.Clone("SystErrorRatio")
+    TotErrorRatio.SetFillColor(TColor.GetColor('#63E2C6'))
+    TotErrorRatio.SetFillStyle(1001)
+    for b in xrange(StatErrorRatio.GetNbinsX()+1):
+        if(StatErrorRatio.GetBinContent(b) != 0):
+            StatErrorRatio.SetBinError(b, StatErrorRatio.GetBinError(b)/StatErrorRatio.GetBinContent(b))
+            TotErrorRatio.SetBinError(b, TotErrorRatio.GetBinError(b)/TotErrorRatio.GetBinContent(b))
+            StatErrorRatio.SetBinContent(b, 1.)
+            TotErrorRatio.SetBinContent(b, 1.)
+        else:
+            StatErrorRatio.SetBinContent(b, 0)
+            TotErrorRatio.SetBinContent(b, 0)
+
     #Set Style for bottom plot
     ratio.SetTitle(";" + xtitle + "; Obs./pred.")
     ratio.GetXaxis().SetTitleSize(.12)
@@ -356,9 +457,23 @@ def plotClosure(observed, predicted, xtitle, ytitle, DataName, additionalInfo, d
     ratio.GetYaxis().SetTitleOffset(.6)
     ratio.GetXaxis().SetLabelSize(.12)
     ratio.GetYaxis().SetLabelSize(.12)
-    ratio.SetMinimum(0.5)
-    ratio.SetMaximum(1.5)
-    ratio.Draw("EP")
+    ratio.SetMinimum(0.3)
+    ratio.SetMaximum(1.7)
+    ratio.Draw("EP")    
+    TotErrorRatio.Draw("E2 same")
+    StatErrorRatio.Draw("E2 same")
+    ratio.Draw("EPsame")
+
+    #Create Legend
+    legend_bottom = TLegend(0.2, .8, .9, .9)
+    legend_bottom.SetNColumns(3)
+    legend_bottom.AddEntry(ratio, "Obs./Pred.")  
+    legend_bottom.AddEntry(StatErrorRatio, "Stat. Unc.")  
+    legend_bottom.AddEntry(TotErrorRatio, "Tot. Unc.")  
+    legend_bottom.SetFillStyle(0)
+    legend_bottom.SetBorderSize(0)
+
+    legend_bottom.Draw()
 
     #Draw a guide for the eye
     line = TLine(ratio.GetXaxis().GetXmin(),1,ratio.GetXaxis().GetXmax(),1)
@@ -795,7 +910,7 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
     ROOT.SetOwnership(Canv,False)               #https://root-forum.cern.ch/t/tlatex-crashing-in-pyroot-after-many-uses/21638/4
     return
 
-def draw2DHist(h, xlabel, ylabel, output):
+def draw2DHist(h, xlabel, ylabel, output, option="ETextColz", x_log = False, y_log = False):
     
     tdr.setTDRStyle()
     GeneralSettings("4.3f")
@@ -804,9 +919,13 @@ def draw2DHist(h, xlabel, ylabel, output):
      
     #Create Canvas
     Canv = TCanvas("Canv"+output, "Canv"+output, 1000, 1000)
+    if x_log:
+        Canv.SetLogx()
+    if y_log:
+        Canv.SetLogy()
 
     h.SetTitle(';'+xlabel+';'+ylabel) 
-    h.Draw('ETextColz')
+    h.Draw(option)
         
     #Throw CMs lumi at it
     cl.CMS_lumi(Canv, 4, 0, 'Preliminary', True)

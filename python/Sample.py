@@ -15,18 +15,18 @@ class Sample:
         self.singleFile         = self.path.endswith('.root')
         self.isSkimmed          = not 'pnfs' in self.path
      
-    def gethCount(self, subPath = None): 
+    def getHist(self, name, subPath = None): 
         if subPath is None:             subPath = self.path
         if subPath.endswith('.root'):
-            hCounter                    = getObjFromFile(subPath, 'blackJackAndHookers/hCounter')
+            hCounter                    = getObjFromFile(subPath, 'blackJackAndHookers/'+name)
             return hCounter
         else:
             hCounter = None
             listOfFiles                 = glob.glob(self.path + '/*.root')
             print self.path + '/*.root'
-            for i, f in enumerate(listOfFiles):
-                if hCounter is None:     hCounter = self.gethCount(f)
-                else:                   hCounter.Add(self.gethCount(f))
+            for f in listOfFiles:
+                if hCounter is None:     hCounter = self.getHist(name, f)
+                else:                   hCounter.Add(self.getHist(name, f))
             return hCounter
  
     def initTree(self, branches = None, needhCount=True):
@@ -44,7 +44,7 @@ class Sample:
         if branches is not None:        self.setSpecificBranches(branches)
 
         if not self.isData and needhCount:   
-            hCounter = self.gethCount()
+            hCounter = self.getHist('hCounter')
             self.hCount = hCounter.GetSumOfWeights()
         
         return self.Chain
@@ -72,6 +72,7 @@ def createSampleList(fileName):
                 else:
                     splitJobs = round((len(glob.glob(path + '/*.root'))/5.)+0.5)
         except:
+            print "failed to open", name
             continue
         yield Sample(name, path, output, int(splitJobs), xsec)
 
