@@ -21,7 +21,7 @@ output_dir = '/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/Plots/'+indat
 
 makeDirIfNeeded('/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/Plots')
 makeDirIfNeeded('/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/Plots/'+indata_str+args.year)
-makePathTimeStamped(output_dir)
+output_dir = makePathTimeStamped(output_dir)
 
 FR = fakeRateCalculator.fakeRateCalculator(args.year, indata_str)
 tightToLoose = FR.getTightToLoose()

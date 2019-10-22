@@ -8,9 +8,9 @@ from helpers import makeDirIfNeeded
 import argparse
 
 argParser = argparse.ArgumentParser(description = "Argument parser")
-argParser.add_argument('--inData',              action='store',         default=None)
 argParser.add_argument('--year',                action='store',         default='2016')
-argParser.add_argument('--runLocal',                action='store',         default='')
+argParser.add_argument('--inData',              action='store_true')
+argParser.add_argument('--runLocal',                action='store_true')
 
 args = argParser.parse_args()
 
@@ -24,7 +24,7 @@ for sample in sampleList:
     for subJob in xrange(sample.splitJobs):
         log = "/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/log/"+sample.name+ "_subjob_"+str(subJob)+".log"
         command = 'python /storage_mnt/storage/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/main.py --sampleName='+sample.name+ ' --subJob='+str(subJob) + ' --year='+args.year
-        if args.inData: command += ' --inData=True'
+        if args.inData: command += ' --inData'
         if args.inData:
             inDataStr = "True"
         else:

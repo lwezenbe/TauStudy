@@ -18,24 +18,18 @@ class fakeRate():
         print 'tmp_'+name.split('_')[0].split('-')[0]
     
     def fill_numerator(self, entries, weight = 1.):
+        
         xval = entries[0]
         yval = entries[1]
-        if self.fakeRate_num.GetXaxis().GetBinUpEdge(self.fakeRate_num.GetXaxis().GetLast()) < xval:
-            xval = self.fakeRate_num.GetXaxis().GetBinCenter(self.fakeRate_num.GetXaxis().GetLast())
-        
-        if self.fakeRate_num.GetYaxis().GetBinUpEdge(self.fakeRate_num.GetYaxis().GetLast()) < yval:
-            yval = self.fakeRate_num.GetYaxis().GetBinCenter(self.fakeRate_num.GetYaxis().GetLast())
-
+        xval = min(max(self.fakeRate_num.GetXaxis().GetBinCenter(1), xval), self.fakeRate_num.GetXaxis().GetBinCenter(self.fakeRate_num.GetXaxis().GetLast())) 
+        yval = min(max(self.fakeRate_num.GetYaxis().GetBinCenter(1), yval), self.fakeRate_num.GetYaxis().GetBinCenter(self.fakeRate_num.GetYaxis().GetLast())) 
         self.fakeRate_num.Fill(xval, yval, weight)
 
     def fill_denominator(self, entries, weight = 1.):
         xval = entries[0]
         yval = entries[1]
-        if self.fakeRate_denom.GetXaxis().GetBinUpEdge(self.fakeRate_denom.GetXaxis().GetLast()) < xval:
-            xval = self.fakeRate_denom.GetXaxis().GetBinCenter(self.fakeRate_denom.GetXaxis().GetLast())
-        
-        if self.fakeRate_denom.GetYaxis().GetBinUpEdge(self.fakeRate_denom.GetYaxis().GetLast()) < yval:
-            yval = self.fakeRate_denom.GetYaxis().GetBinCenter(self.fakeRate_denom.GetYaxis().GetLast())
+        xval = min(max(self.fakeRate_denom.GetXaxis().GetBinCenter(1), xval), self.fakeRate_denom.GetXaxis().GetBinCenter(self.fakeRate_denom.GetXaxis().GetLast())) 
+        yval = min(max(self.fakeRate_denom.GetYaxis().GetBinCenter(1), yval), self.fakeRate_denom.GetYaxis().GetBinCenter(self.fakeRate_denom.GetYaxis().GetLast())) 
 
         self.fakeRate_denom.Fill(xval, yval, weight)
     

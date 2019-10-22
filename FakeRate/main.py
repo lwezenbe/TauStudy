@@ -1,17 +1,17 @@
 import ROOT
 import numpy as np
 
-lumi = 36000
+lumi = 35545.499064
 
 #Parse arguments
 import argparse
 
 argParser = argparse.ArgumentParser(description = "Argument parser")
-argParser.add_argument('--sampleName',          action='store',         default='DYJetsToLL_M-50')
-argParser.add_argument('--inData',              action='store',         default=None)
-argParser.add_argument('--subJob',              action='store',         default=0)
-argParser.add_argument('--year',                action='store',         default='2016')
-argParser.add_argument('--isTest',              action='store',         default=False)
+argParser.add_argument('--sampleName',          action='store',         default='DYJetsToLL_M-50',      help='Name of the sample. Default is DYJetsToLL_M-50')
+argParser.add_argument('--subJob',              action='store',         default=0,                      help='Index of subjob. Default is 0')
+argParser.add_argument('--year',                action='store',         default='2016',                 help='Year of datataking (2016, 2017, 2018)')
+argParser.add_argument('--inData',              action='store_true',                                    help='Calculate fake rate in data DY CR')
+argParser.add_argument('--isTest',              action='store_true',                                    help='Run a local test with limited number of events')
 
 args = argParser.parse_args()
 
@@ -50,7 +50,7 @@ Chain = sample.initTree()
 
 #Determine if testrun so it doesn't need to calculate the number of events in the getEventRange (current bottleneck)
 if args.isTest:
-    eventRange = xrange(30000)
+    eventRange = sample.getEventRange(int(args.subJob))
 else:
     eventRange = sample.getEventRange(int(args.subJob))
 
@@ -64,12 +64,8 @@ for entry in eventRange:
     
     if not eventSelection.passTriggers(Chain):      continue
     
-    tau_index = eventSelection.isGoodBaseEvent(Chain, needPromptTau=forPromptSubtraction)
+    tau_index = eventSelection.isGoodBaseEvent(Chain, needPromptTau=forPromptSubtraction)       #Need prompt taus for MC samples when measuring in data
     if tau_index == -1: continue
-
-    #test
-    if not forPromptSubtraction:
-        if Chain._tauGenStatus[tau_index] != 6: continue
 
     tau_FV = objectSelection.getFourVec(Chain._lPt[tau_index], Chain._lEta[tau_index], Chain._lPhi[tau_index], Chain._lE[tau_index])
     tau_FV *= tauES.getES(Chain._tauDecayMode[tau_index])
@@ -83,15 +79,20 @@ for entry in eventRange:
         puWeight = puReweighting(Chain._nTrueInt)
         weightfactor *= puWeight
 
-        weightfactor[0] *= tauSF.getSF(args.year, 'Tight')[0]
-        weightfactor[1] *= tauSF.getSF(args.year, 'VLoose')[0]
-    
+    #    weightfactor[0] *= tauSF.getSF(args.year, 'Tight')[0]
+    #    weightfactor[1] *= tauSF.getSF(args.year, 'VLoose')[0]
+
     #Fill Fake Rate
+    #If elif structure: if measured in data and MC sample for prompt subtraction, both numerator and denominator are always filled
+    #else it looks if the tau is tight to fill the numerator
     FR.fill_denominator((tau_FV.Pt(), abs(tau_FV.Eta())), weightfactor[1])
     if forPromptSubtraction: 
         FR.fill_numerator((tau_FV.Pt(), abs(tau_FV.Eta())), weightfactor[0])
     elif objectSelection.isTightTau(Chain, tau_index):            
-            FR.fill_numerator((tau_FV.Pt(), abs(tau_FV.Eta())), weightfactor[0])
+        FR.fill_numerator((tau_FV.Pt(), abs(tau_FV.Eta())), weightfactor[0])
+
+print FR.get_numerator().GetSumOfWeights(), FR.get_denominator().GetSumOfWeights()
+print FR.get_numerator().GetEntries(), FR.get_denominator().GetEntries()
 
 #if not args.isTest:
 if True:
