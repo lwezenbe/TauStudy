@@ -8,7 +8,7 @@ list_of_datafiles = ['SingleMuon', 'SingleElectron', 'DoubleMuon', 'DoubleEG', '
 import argparse
 argParser = argparse.ArgumentParser(description = "Argument parser")
 argParser.add_argument('--year',        action='store',         default='2016')
-argParser.add_argument('--skim',        action='store',         default='ewkino')
+argParser.add_argument('--skim',        action='store',         default='FR')
 
 args = argParser.parse_args()
 
@@ -20,10 +20,13 @@ event_information_set = set()
 for f_name in list_of_datafiles:    
     file_list =  glob.glob('/storage_mnt/storage/user/lwezenbe/public/ntuples/'+args.year+ '/' + args.skim +'/tmp_'+f_name+'/*.root')
     for i, sub_f_name in enumerate(file_list):
-        print sub_f_name
         f = ROOT.TFile(sub_f_name)
         c = f.Get('blackJackAndHookers/blackJackAndHookersTree')
-       
+        try:
+            c.GetEntry()
+        except:
+            continue       
+
         output_file = ROOT.TFile(output_folder +'/'+ sub_f_name.split('/')[-1], 'recreate')
         output_file.mkdir('blackJackAndHookers')
         output_file.cd('blackJackAndHookers')
@@ -45,7 +48,7 @@ for f_name in list_of_datafiles:
 
 import os
 os.system('hadd -f '+output_folder+'/../Data_'+args.year+'.root '+output_folder + '/*.root')
-os.system('rm -r '+output_folder)
 for d in list_of_datafiles:
     os.system('rm -r '+output_folder + '/../tmp_'+d)
+os.system('rm -r '+output_folder)
     

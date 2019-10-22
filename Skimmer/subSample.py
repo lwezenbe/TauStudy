@@ -39,6 +39,7 @@ class subSample():
                 self.listOfSubjobs.append(tmp_list)
                 tmp_list = [f]
                 total_size = self.fileSize(f)
+        self.listOfSubjobs.append(tmp_list)     #Append last batch of jobs, this was not done since loop reached the end
         return self.listOfSubjobs
 
     #Get combined hCounter or hCounterSUSY 
@@ -52,16 +53,18 @@ class subSample():
             for f in self.arrangeFilesInSubjobs()[subjob]:
                 if hCounter is None:     hCounter = self.getHist(subjob,name, f)
                 else:                    hCounter.Add(self.getHist(subjob, name, f))
-                print hCounter.GetSumOfWeights()
             return hCounter
     
     def initChain(self, subjob):
         self.Chain              = ROOT.TChain('blackJackAndHookers/blackJackAndHookersTree')
-        
-        for f in self.arrangeFilesInSubjobs()[subjob]:
-            if 'pnfs' in f:
-                f = 'root://maite.iihe.ac.be'+f
-            self.Chain.Add(f)
+       
+        if '.root' in self.path:
+            self.Chain.Add(self.path)
+        else: 
+            for f in self.arrangeFilesInSubjobs()[subjob]:
+                if 'pnfs' in f:
+                    f = 'root://maite.iihe.ac.be'+f
+                self.Chain.Add(f)
 
         return self.Chain 
 
@@ -75,13 +78,16 @@ def createSampleList(fileName):
     return list_of_paths
 
 if __name__ == "__main__":
-    #s = subSample('/pnfs/iihe/cms/store/user/lwezenbe/heavyNeutrino/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/crab_MiniAOD2016v3_ext1-v2_2016-v1', 0)   
-    s = subSample('/pnfs/iihe/cms/store/user/lwezenbe/heavyNeutrino/SingleMuon/crab_Run2016H-17Jul2018-v1_ForJana', 0)   
-    x = s.arrangeFilesInSubjobs()
-    print len(x)
-    for sub in s.listOfSubjobs:
-        total = 0
-        for j in sub:
-            total += s.fileSize(j)
-            print j, s.fileSize(j)        
-        print total
+    import subprocess
+    s = createSampleList("Data/ewkino_2016.conf")
+    for f in s:
+        number_of_subdir = int(subprocess.check_output("/bin/ls -lA " + f + "/* | egrep -c '^-|^d'", shell=True, stderr=subprocess.STDOUT))
+        for n in xrange(number_of_subdir):
+            sam = subSample(f, n)
+            print f, n, len(sam.listOfAllFiles)
+            numl = 0
+            los = sam.arrangeFilesInSubjobs()
+            for l in los:
+                numl += len(l)
+            print numl
+            print sam.group,  sam.name, len(los)

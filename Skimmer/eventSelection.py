@@ -53,7 +53,7 @@ def isGoodEventFakeRate(Chain):
     if nTau != 1:                                                               return False
 
     #Missing energy cut
-#    if Chain._met > 50.:                                                        return False
+    if Chain._met > 50.:                                                        return False
 
     l1 = ROOT.TLorentzVector()
     l2 = ROOT.TLorentzVector()
@@ -65,7 +65,6 @@ def isGoodEventFakeRate(Chain):
     return True
 
 def isGoodEventEwkino(Chain):
-    
     #Select good leptons and save indices
     lIndices = []
     nTau = 0
@@ -75,7 +74,7 @@ def isGoodEventEwkino(Chain):
         if Chain._lFlavor[l] == 2 and not objSel.isGoodTauEwkino(Chain, l):                             continue
         lIndices.append(l)
         if Chain._lFlavor[l] == 2: nTau += 1
-
+    
     #Keep only events with exactly 3 good leptons
     if len(lIndices) < 3:                                                       return False
 
@@ -88,8 +87,7 @@ def isGoodEventEwkino(Chain):
     contains_B_Jet = False
     for jet in xrange(Chain._nJets):
         if not objSel.isCleanJet(Chain, jet):                                   continue
-        if Chain._jetCsvV2[jet]  > 0.8484:                                      contains_B_Jet = True
-
+        if (Chain._jetDeepCsv_b[jet] + Chain._jetDeepCsv_bb[jet]) > 0.2219:   contains_B_Jet = True
     if contains_B_Jet:                                                          return False
 
     return True

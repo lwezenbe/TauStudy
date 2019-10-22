@@ -5,7 +5,7 @@ import glob
 import argparse
 
 argParser = argparse.ArgumentParser(description = "Argument parser")
-argParser.add_argument('--inData',              action='store',         default=None)
+argParser.add_argument('--inData',              action='store_true')
 argParser.add_argument('--year',                action='store',         default='2016')
 
 args = argParser.parse_args()
