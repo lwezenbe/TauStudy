@@ -25,7 +25,7 @@ for sample in sampleList:
     if not args.inData:
         if not sample.output in MCsamples: continue
     for subJob in xrange(sample.splitJobs):
-        log = "/user/lwezenbe/private/PhD/Results/TauStudy/FakeRate/ClosureTest/log/"+sample.name+ "_subjob_"+str(subJob)+".log"
+        log = "/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/ClosureTest/log/"+sample.name+ "_subjob_"+str(subJob)+".log"
         command = 'python /storage_mnt/storage/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/ClosureTest/closureTest.py --sampleName='+sample.name+ ' --subJob='+str(subJob) +' --year='+args.year
         if args.isCheck:        command += ' --isCheck'
         if args.inData:        command += ' --inData'

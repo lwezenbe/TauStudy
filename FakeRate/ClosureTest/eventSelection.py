@@ -139,7 +139,7 @@ def passedControlRegion(Chain, lIndices, nTau, lVec):
     
     if Chain._met < 50:         return False
 
-    l1 = objectSelection.getFourVec(Chain._lPt[lIndices[0]], Chain._lEta[lIndices[0]], Chain._lPhi[lIndices[0]], Chain._lE[lIndices[0]]
+    l1 = objectSelection.getFourVec(Chain._lPt[lIndices[0]], Chain._lEta[lIndices[0]], Chain._lPhi[lIndices[0]], Chain._lE[lIndices[0]])
     l2 = objectSelection.getFourVec(Chain._lPt[lIndices[1]], Chain._lEta[lIndices[1]], Chain._lPhi[lIndices[1]], Chain._lE[lIndices[1]])
     if abs((l1+l2).M()-91.19) > 15:     return False
 
