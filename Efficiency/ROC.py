@@ -1,5 +1,5 @@
 from ROOT import TH1D, TFile, TGraphErrors
-from helpers import makeDirIfNeeded, getObjFromFile
+from helpers_old import makeDirIfNeeded, getObjFromFile
 import numpy as np
 
 class ROC:

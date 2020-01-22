@@ -3,7 +3,7 @@ from ROOT import TLine, THStack, TColor, TCanvas, TLegend, gROOT, gStyle, TH1, T
 import CMS_lumi as cl
 import tdrstyle as tdr
 import numpy as np
-from helpers import makeDirIfNeeded, isTimeStampFormat, sortByOtherList
+from helpers_old import makeDirIfNeeded, isTimeStampFormat, sortByOtherList
 import os
 
 def GeneralSettings(paintformat = "4.2f"):
@@ -31,13 +31,13 @@ def GetStackColorTauPOG(index):
 
 def GetStackColorTauPOGbyName(name):
     if 'VVV' in name:           return "#87F1FF"
-    elif 'TT' in name:            return "#18252a"
-    elif 'VV' in name:          return "#de5a6a"
+    elif 'TT' in name:            return "#F4F1BB"
+    elif 'VV' in name:          return "#9F7E69"
     elif 'ST' in name:          return "#9999cc"
     elif 'WJets' in name:       return "#4496c8"
     elif 'QCD' in name:         return "#e5b7e5"
     elif 'DY' in name:          return "#ffcc66"
-#    elif 'H' in name:           return "#87F1FF"
+    elif 'H' in name:           return "#87F1FF"
     else:                       return "#F4F1BB"
 
 def GetHistColor(index):        
@@ -209,7 +209,7 @@ def savePlots(Canv, destination):
         Canv.SaveAs(php_destination + ".png")
         Canv.SaveAs(php_destination + ".root")
 
-def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, ytitle_bottom = 'Data/MC', ylog=False):
+def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, year, ytitle_bottom = 'Data/MC', ylog=False):
     GeneralSettings()
     
     Canv = TCanvas("Canv"+destination, "Canv"+destination, 1000, 1000)
@@ -351,14 +351,14 @@ def plotDataVSMC(DataHist, MCHist, xtitle, legendNames, DataName, destination, y
     legend_bottom.Draw()
    
     #Throw CMs lumi at it
-    cl.CMS_lumi(Canv, 4, 11, 'Preliminary', True)
+    cl.CMS_lumi(Canv, 4, 11, year, 'Preliminary', True)
     print 'save'
  
     #Save everything
     savePlots(Canv, destination)
     print 'saved'
 
-def plotClosure(observed, predicted, xtitle, ytitle, DataName, additionalInfo, destination, yLog = False):
+def plotClosure(observed, predicted, xtitle, ytitle, DataName, additionalInfo, destination, year, yLog = False):
     GeneralSettings()
     
     Canv = TCanvas("Canv"+destination, "Canv"+destination, 1000, 1000)
@@ -483,12 +483,12 @@ def plotClosure(observed, predicted, xtitle, ytitle, DataName, additionalInfo, d
     line.Draw("Same")
    
     #Throw CMs lumi at it
-    cl.CMS_lumi(Canv, 4, 11, 'Preliminary', True)
+    cl.CMS_lumi(Canv, 4, 11, year, 'Preliminary', True)
  
     #Save everything
     savePlots(Canv, destination)
 
-def plotROC(xdata, ydata, xlabel, ylabel, legendNames,destination, xerror = None, yerror = None, xlog = False, ylog = False, additionalInformation = None):
+def plotROC(xdata, ydata, xlabel, ylabel, legendNames,destination, year, xerror = None, yerror = None, xlog = False, ylog = False, additionalInformation = None):
     GeneralSettings()
     #Make sure single curves also pass
     try:
@@ -588,7 +588,7 @@ def plotROC(xdata, ydata, xlabel, ylabel, legendNames,destination, xerror = None
     #Save everything
     savePlots(Canv, destination)
 
-def plotROCfromgraph(graphs, xlabel, ylabel, legendNames,destination, xlog = False, ylog = False, additionalInformation = None):
+def plotROCfromgraph(graphs, xlabel, ylabel, legendNames,destination, year, xlog = False, ylog = False, additionalInformation = None):
     GeneralSettings()
     #Make sure single curves also pass
     try:
@@ -614,7 +614,7 @@ def plotROCfromgraph(graphs, xlabel, ylabel, legendNames,destination, xlog = Fal
     mgraph.Draw("APLine")
     mgraph.SetTitle(";" + xlabel + ";" + ylabel)
     
-    cl.CMS_lumi(Canv, 4, 11, 'Simulation', False)
+    cl.CMS_lumi(Canv, 4, 11, year, 'Simulation', False)
     
     xmax = GetXMax(graphs)
     xmin = GetXMin(graphs)
@@ -676,7 +676,7 @@ def plotROCfromgraph(graphs, xlabel, ylabel, legendNames,destination, xlog = Fal
     #Save everything
     savePlots(Canv, destination)
 
-def DrawHist(hist, xlabel, ylabel, legendNames, destination, ylog = False):
+def DrawHist(hist, xlabel, ylabel, legendNames, destination, year, ylog = False):
     GeneralSettings()
 
     #Create Canvas
@@ -715,12 +715,12 @@ def DrawHist(hist, xlabel, ylabel, legendNames, destination, ylog = False):
         legend.Draw()
     
     #CMS lumi
-    cl.CMS_lumi(Canv, 4, 11, 'Simulation', False)
+    cl.CMS_lumi(Canv, 4, 11, year, 'Simulation', False)
 
     #Save everything
     savePlots(Canv, destination)
 
-def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName, destination, ylog = False, customLabels = None, extraText = None, scaleSignalToBkgr = False, DivideByLine = None):
+def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName, destination, year, ylog = False, customLabels = None, extraText = None, scaleSignalToBkgr = False, DivideByLine = None):
     GeneralSettings()
 
     #Make sure the code works for single backgrounds
@@ -729,7 +729,7 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
     if not isinstance(SignalHist,(list,)):
         SignalHist = [SignalHist]
 
-    BkgrHist, legendNames = orderHist(BkgrHist, legendNames)
+    BkgrHist, legendNames = orderHist(BkgrHist, legendNames, True)
 
     #Add all backgrounds
     totBkgr = BkgrHist[0].Clone("TotBkgr")
@@ -903,14 +903,14 @@ def calcAndDrawSignificance(SignalHist, BkgrHist, xtitle, legendNames, DataName,
                 xaxis.SetBinLabel(i+1, label)  
   
     #Throw CMs lumi at it
-    cl.CMS_lumi(Canv, 4, 11, 'Simulation Preliminary', True)
+    cl.CMS_lumi(Canv, 4, 11, year, 'Simulation Preliminary', True)
 
     #Save everything
     savePlots(Canv, destination)
     ROOT.SetOwnership(Canv,False)               #https://root-forum.cern.ch/t/tlatex-crashing-in-pyroot-after-many-uses/21638/4
     return
 
-def draw2DHist(h, xlabel, ylabel, output, option="ETextColz", x_log = False, y_log = False):
+def draw2DHist(h, xlabel, ylabel, output, year, option="ETextColz", x_log = False, y_log = False):
     
     tdr.setTDRStyle()
     GeneralSettings("4.3f")
@@ -928,7 +928,7 @@ def draw2DHist(h, xlabel, ylabel, output, option="ETextColz", x_log = False, y_l
     h.Draw(option)
         
     #Throw CMs lumi at it
-    cl.CMS_lumi(Canv, 4, 0, 'Preliminary', True)
+    cl.CMS_lumi(Canv, 4, 0, year, 'Preliminary', True)
 
     #Save everything
     savePlots(Canv, output)

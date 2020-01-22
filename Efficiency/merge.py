@@ -1,7 +1,7 @@
 import ROOT, glob, os
 from ROOT import TFile, TCanvas
 from plottingTools import plotROC, DrawHist, extraTextFormat
-from helpers import getObjFromFile, loadtxtCstyle, progress, makeDirIfNeeded
+from helpers_old import getObjFromFile, loadtxtCstyle, progress, makeDirIfNeeded
 import numpy as np
 import argparse
 
@@ -45,7 +45,7 @@ def merge(effOrmisid, sampleName, method, category):
         os.system('hadd -f ' + basefolder+'/Merged/'+folder+'/'+method+'/'+ sampleName+'/pt_'+effOrmisid+'_'+tau_id[0]+'.root '+ basefolder + '/' + sampleName + '/' + method + '/pt_'+effOrmisid+'_'+tau_id[0] +'_*.root')
 #    os.system('rm '+basefolder + '/'+sampleName + '/'+method+'/*.root')    
 
-merge('efficiency', 'WZ', 'Bluj', 'Iso')
+#merge('efficiency', 'WZ', 'Bluj', 'Iso')
 merge('fakerate', 'DYJets', 'Bluj', 'Iso')
 #merge('efficiency', 'WZ', 'AN', 'LepDiscr')
 #merge('fakerate', 'DYJets', 'AN', 'LepDiscr')

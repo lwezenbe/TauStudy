@@ -1,5 +1,5 @@
 import plottingTools as plt
-from helpers import getObjFromFile, makeDirIfNeeded, makePathTimeStamped, CleanNegativeBins
+from helpers_old import getObjFromFile, makeDirIfNeeded, makePathTimeStamped, CleanNegativeBins
 import argparse, glob
 
 argParser = argparse.ArgumentParser(description = "Argument parser")
@@ -16,6 +16,12 @@ categ_map = {'Categ_C': 'C: OSSF + #tau', 'Categ_D': 'D: OSOF + #tau', 'Categ_E'
 makeDirIfNeeded(args.output_dir+'/'+args.sample)
 file_paths = glob.glob(args.input_dir + '/' + args.sample + '/*.root')
 
+year = 2016
+if '2017' in args.input_dir:
+    year = 2017
+elif '2018' in args.input_dir:
+    year = 2018
+
 for f in file_paths:
     print f
     h_name = f.rsplit('/', 1)[1]
@@ -30,5 +36,5 @@ for f in file_paths:
     
     dist_observed = getObjFromFile(f, h_name)
     dist_predicted = getObjFromFile(f, h_name+'_sideBand')
-    plt.plotClosure(CleanNegativeBins(dist_observed), CleanNegativeBins(dist_predicted), xtitle_map[var_name], ytitle_map[var_name], args.sample, extraText, args.output_dir + '/' +args.sample+'/'+h_name, yLog=log_map[var_name])
+    plt.plotClosure(CleanNegativeBins(dist_observed), CleanNegativeBins(dist_predicted), xtitle_map[var_name], ytitle_map[var_name], args.sample, extraText, args.output_dir + '/' +args.sample+'/'+h_name, year, yLog=log_map[var_name])
 

@@ -2,7 +2,7 @@ import ROOT
 import os
 from Sample import createSampleList, getSampleFromList
 import jobSubmitter as sub
-from helpers import makeDirIfNeeded
+from helpers_old import makeDirIfNeeded
 
 #Parse arguments
 import argparse

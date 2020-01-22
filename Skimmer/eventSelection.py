@@ -1,6 +1,6 @@
 import ROOT
 import objectSelection as objSel
-from helpers import showBranch
+from helpers_old import showBranch
 
 def selectMuonsAN17_094(Chain):
     nMu = 0
@@ -34,6 +34,17 @@ def isGoodEventJana(Chain):
 
     if len(lIndices) < 3:       return False
     elif nTau < 1:              return False
+
+    #Missing energy cut
+    if Chain._met < 50.:                                                        return False
+
+    #B-tag veto
+    contains_B_Jet = False
+    for jet in xrange(Chain._nJets):
+        if not objSel.isCleanJet(Chain, jet):                                   continue
+        if (Chain._jetDeepCsv_b[jet] + Chain._jetDeepCsv_bb[jet]) > 0.2219:   contains_B_Jet = True
+    if contains_B_Jet:                                                          return False
+
     return True
 
 def isGoodEventFakeRate(Chain):

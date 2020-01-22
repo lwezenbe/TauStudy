@@ -1,6 +1,6 @@
 import os
 import ROOT, glob
-from helpers import getObjFromFile
+from helpers_old import getObjFromFile
 
 
 class subSample():
@@ -81,13 +81,4 @@ if __name__ == "__main__":
     import subprocess
     s = createSampleList("Data/ewkino_2016.conf")
     for f in s:
-        number_of_subdir = int(subprocess.check_output("/bin/ls -lA " + f + "/* | egrep -c '^-|^d'", shell=True, stderr=subprocess.STDOUT))
-        for n in xrange(number_of_subdir):
-            sam = subSample(f, n)
-            print f, n, len(sam.listOfAllFiles)
-            numl = 0
-            los = sam.arrangeFilesInSubjobs()
-            for l in los:
-                numl += len(l)
-            print numl
-            print sam.group,  sam.name, len(los)
+        print f

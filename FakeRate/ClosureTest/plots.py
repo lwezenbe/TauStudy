@@ -1,5 +1,5 @@
 import plottingTools as plt
-from helpers import getObjFromFile, makeDirIfNeeded, makePathTimeStamped
+from helpers_old import getObjFromFile, makeDirIfNeeded, makePathTimeStamped
 import glob, os
 import jobSubmitter as sub
 
@@ -8,7 +8,7 @@ import argparse
 
 argParser = argparse.ArgumentParser(description = "Argument parser")
 argParser.add_argument('--year',                action='store',         default='2016')
-argParser.add_argument('--inData',              action='store',         default='') 
+argParser.add_argument('--inData',              action='store_true',         default=False) 
 args = argParser.parse_args()
 
 if args.inData:

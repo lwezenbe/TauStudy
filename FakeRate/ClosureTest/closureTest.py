@@ -1,7 +1,6 @@
 import ROOT
 import numpy as np
 
-lumi = 35545.499064
 output_dir = '/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/ClosureTest/Data'
 
 #Parse arguments
@@ -18,7 +17,15 @@ argParser.add_argument('--isCheck',             action='store_true',            
 args = argParser.parse_args()
 print 'Loading in samples'
 
+
+if args.year == '2016':
+    lumi = 35545.499064
+elif args.year == '2017':
+    lumi = 41859.4
+else:
+    lumi = 59970
 #Load in samples
+
 import Sample
 if not args.isCheck:
     sampleList = Sample.createSampleList('/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/ClosureTest/Data/inputFiles_'+args.year+'.conf')
@@ -110,7 +117,7 @@ else:
     eventRange = sample.getEventRange(int(args.subJob))
 
 import objectSelection
-from helpers import progress, makeDirIfNeeded, showBranch
+from helpers_old import progress, makeDirIfNeeded, showBranch
 
 #Loop over events
 for entry in eventRange:
@@ -195,7 +202,9 @@ for entry in eventRange:
     #        weightfactor *= tauSF.getSF(args.year, 'Tight')[0]
     #    else:
     #        weightfactor *= tauSF.getSF(args.year, 'VLoose')[0]
-    
+
+    #if category == 3 and var[3] < 75 and var[3] > 65:   print weightfactor, fake_factor
+        
     #Fill histograms
     for v, h in zip(var, hist[category]):
         if isinstance(v, tuple):
@@ -206,6 +215,7 @@ for entry in eventRange:
     
 for i, c in enumerate(categories):
     print c, hist[i][1].get_histogram().GetEntries(), hist[i][1].get_sideband().GetEntries(), hist[i][1].get_histogram().GetSumOfWeights(), hist[i][1].get_sideband().GetSumOfWeights()
+    print c, hist[i][1].get_histogram().GetBinContent(7),  hist[i][1].get_sideband().GetBinContent(7)
 
 
 #Write

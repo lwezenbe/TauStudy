@@ -3,7 +3,7 @@ import argparse
 from ROOT import TLorentzVector, TH1D
 import numpy as np
 import Sample
-from helpers import progress, makeDirIfNeeded, showBranch
+from helpers_old import progress, makeDirIfNeeded, showBranch
 import objectSelection as objSel
 from efficiency import efficiency
 from ROC import ROC
@@ -73,34 +73,54 @@ def CalcBlujFakeRate(Chain, sample, args):
     global roc
     global ptHist
     global etaHist
-    global test_NL
- 
-    for jet in xrange(Chain._nJets):
-   
-        if Chain._jetPt[jet] < 20 or abs(Chain._jetEta[jet]) > 2.3:                     continue
 
-        jetVec = objSel.getFourVec(Chain._jetPt[jet], Chain._jetEta[jet], Chain._jetPhi[jet], Chain._jetE[jet])
-
-        #Find matching reco tau
-        matchindex = objSel.tauMatchIndexIso(Chain, jetVec, needFake=True)
-        if matchindex == -1:    continue       
+    for lepton in xrange(Chain._nLight, Chain._nL):
+        
+        if not objSel.isGoodBaseTauIso(Chain, lepton):  continue
+        if Chain._tauGenStatus[lepton] != 6:            continue
         
         for i in xrange(len(tau_id_algos)):
             roc[i].fill_misid_denominator(Chain._weight)
-            ptHist[i].fill_denominator(Chain._jetPt[jet], Chain._weight)
-            etaHist[i].fill_denominator(Chain._jetEta[jet], Chain._weight)
+            ptHist[i].fill_denominator(Chain._lPt[lepton], Chain._weight)
+            etaHist[i].fill_denominator(Chain._lEta[lepton], Chain._weight)
 
-        DMfinding = objSel.getDMfinding(Chain, matchindex)
-        discriminators = objSel.getTauIDs(Chain, matchindex)
+        DMfinding = objSel.getDMfinding(Chain, lepton)
+        discriminators = objSel.getTauIDs(Chain, lepton) 
 
-        #if DMfinding[0] and 
         for i, discr in enumerate(discriminators):
             if not DMfinding[i]: continue
             for j, WP in enumerate(discr):
                 if WP:
                     roc[i].fill_misid_numerator(j, Chain._weight)
-                    ptHist[i].fill_numerator(Chain._jetPt[jet], j, Chain._weight)
-                    etaHist[i].fill_numerator(Chain._jetEta[jet], j, Chain._weight)
+                    ptHist[i].fill_numerator(Chain._lPt[lepton], j, Chain._weight)
+                    etaHist[i].fill_numerator(Chain._lEta[lepton], j, Chain._weight)
+ 
+#    for jet in xrange(Chain._nJets):
+#   
+#        if Chain._jetPt[jet] < 20 or abs(Chain._jetEta[jet]) > 2.3:                     continue
+#
+#        jetVec = objSel.getFourVec(Chain._jetPt[jet], Chain._jetEta[jet], Chain._jetPhi[jet], Chain._jetE[jet])
+#
+#        #Find matching reco tau
+#        matchindex = objSel.tauMatchIndexIso(Chain, jetVec, needFake=True)
+#        if matchindex == -1:    continue       
+#        
+#        for i in xrange(len(tau_id_algos)):
+#            roc[i].fill_misid_denominator(Chain._weight)
+#            ptHist[i].fill_denominator(Chain._jetPt[jet], Chain._weight)
+#            etaHist[i].fill_denominator(Chain._jetEta[jet], Chain._weight)
+#
+#        DMfinding = objSel.getDMfinding(Chain, matchindex)
+#        discriminators = objSel.getTauIDs(Chain, matchindex)
+#
+#        #if DMfinding[0] and 
+#        for i, discr in enumerate(discriminators):
+#            if not DMfinding[i]: continue
+#            for j, WP in enumerate(discr):
+#                if WP:
+#                    roc[i].fill_misid_numerator(j, Chain._weight)
+#                    ptHist[i].fill_numerator(Chain._jetPt[jet], j, Chain._weight)
+#                    etaHist[i].fill_numerator(Chain._jetEta[jet], j, Chain._weight)
 
 ###########
 #Main body#

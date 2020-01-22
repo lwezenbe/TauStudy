@@ -2,7 +2,7 @@
 # PU reweighting class
 #
 import ROOT, sys, os
-from helpers import getObjFromFile
+from helpers_old import getObjFromFile
 
 dataDir = '/user/lwezenbe/private/PhD/Code/TauStudy/python/puReweightingData/'
 

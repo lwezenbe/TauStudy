@@ -1,5 +1,5 @@
 import ROOT, glob, os
-from helpers import isValidRootFile, getObjFromFile
+from helpers_old import isValidRootFile, getObjFromFile
 
 class Sample:
 

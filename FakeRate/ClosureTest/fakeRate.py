@@ -1,4 +1,4 @@
-from helpers import getObjFromFile
+from helpers_old import getObjFromFile
 from objectSelection import isTightTau
 
 class fakeRate():

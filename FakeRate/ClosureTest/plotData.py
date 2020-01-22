@@ -1,5 +1,5 @@
 import plottingTools as plt
-from helpers import getObjFromFile, makeDirIfNeeded, makePathTimeStamped
+from helpers_old import getObjFromFile, makeDirIfNeeded, makePathTimeStamped
 import glob, os
 import jobSubmitter as sub
 
@@ -39,7 +39,7 @@ for var in varNames:
     predicted.append(store_data_observed)
     legendNames.append('Nonprompt prediction')
     
-    plt.plotDataVSMC(observed, predicted, xtitle_map[var], legendNames, 'Observation',  output_dir+'/'+var, ytitle_bottom = 'Measured/pred.')
+    plt.plotDataVSMC(observed, predicted, xtitle_map[var], legendNames, 'Observation',  output_dir+'/'+var, int(args.year), ytitle_bottom = 'Measured/pred.')
     
 
 

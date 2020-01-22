@@ -1,12 +1,12 @@
 import plottingTools as plt
 import fakeRateCalculator
-from helpers import makeDirIfNeeded, makePathTimeStamped
+from helpers_old import makeDirIfNeeded, makePathTimeStamped
 
 #Parse arguments
 import argparse
 
 argParser = argparse.ArgumentParser(description = "Argument parser")
-argParser.add_argument('--inData',              action='store',         default=None)
+argParser.add_argument('--inData',              action='store_true',         default=False)
 argParser.add_argument('--year',                action='store',         default='2016')
 
 args = argParser.parse_args()
@@ -28,4 +28,4 @@ tightToLoose = FR.getTightToLoose()
 
 output_str = output_dir+'/tightToLoose'
 
-plt.draw2DHist(tightToLoose, 'p_{T} [GeV]', '|#eta|', output_str)
+plt.draw2DHist(tightToLoose, 'p_{T} [GeV]', '|#eta|', output_str, int(args.year))

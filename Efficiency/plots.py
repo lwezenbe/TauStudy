@@ -1,7 +1,7 @@
 import ROOT, os, time
 from ROOT import TFile, TCanvas, TGraphErrors
 from plottingTools import plotROC, DrawHist, extraTextFormat, plotROCfromgraph
-from helpers import getObjFromFile, loadtxtCstyle, makeDirIfNeeded, timeStampFolder
+from helpers_old import getObjFromFile, loadtxtCstyle, makeDirIfNeeded, timeStampFolder
 import numpy as np
 from ROC import ROC
 import argparse
@@ -19,15 +19,15 @@ args = argParser.parse_args()
 if args.category == 'LepDiscr':
     #Define the algorithms and their working points
     tau_id_algos = [('MuonDiscrMVA', ['Loose',  'Tight']),
-#                    ('MuonDiscrdeeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight']), 
-                    ('ElectronDiscrMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight'])]
- #                   ('ElectronDiscrdeeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight'])]   #Change getTauLepDiscr() accordingly
+                    ('MuonDiscrdeeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight']), 
+                    ('ElectronDiscrMVA', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
+                    ('ElectronDiscrdeeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight'])]   #Change getTauLepDiscr() accordingly
 else:
     #Define the algorithms and their working points
     tau_id_algos = [('oldMVA2017v2', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
             ('newMVA2017v2', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
             ('cut_based', ['VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight']),
-  #          ('deeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight']),  #If you add more ID's, don't forget to change it in the getTauIDs() function in objectSelection as well
+            ('deeptau', ['VVVLoose', 'VVLoose', 'VLoose', 'Loose', 'Medium', 'Tight', 'VTight', 'VVTight']),  #If you add more ID's, don't forget to change it in the getTauIDs() function in objectSelection as well
             ('oldMVA2015', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight']),
             ('newMVA2015', ['VLoose', 'Loose', 'Medium', 'Tight', 'VTight'])]
 
@@ -73,10 +73,10 @@ for n, name in enumerate(tau_id_algos):
 
 discr = [x[0] for x in tau_id_algos]
 if not args.category == 'LepDiscr': 
-    plotROCfromgraph(ROC_graphs,  "Efficiency (%)", ylabel, discr, basefolderOutput+"/ROC/ROC_All",False, True, extraText)
+    plotROCfromgraph(ROC_graphs,  "Efficiency (%)", ylabel, discr, basefolderOutput+"/ROC/ROC_All", '2016', False, True, extraText)
 else:
-    plotROCfromgraph(ROC_graphs[:2],  "Efficiency (%)", "#mu -> #tau FR", discr[:2], basefolderOutput+"/ROC/ROC_Muon",False, True, extraText)
-    plotROCfromgraph(ROC_graphs[2:],  "Efficiency (%)", "e -> #tau FR", discr[2:], basefolderOutput+"/ROC/ROC_Electron",False, True, extraText)
+    plotROCfromgraph(ROC_graphs[:2],  "Efficiency (%)", "#mu -> #tau FR", discr[:2], basefolderOutput+"/ROC/ROC_Muon", '2016', False, True, extraText)
+    plotROCfromgraph(ROC_graphs[2:],  "Efficiency (%)", "e -> #tau FR", discr[2:], basefolderOutput+"/ROC/ROC_Electron", '2016', False, True, extraText)
     
 
 from efficiency import efficiency
@@ -89,4 +89,4 @@ for v in var:
             tmp = []
             for i ,WP in enumerate(d[1]):
                 tmp.append(eff.get_efficiency(i, 'efficiency' in categ))
-            DrawHist(tmp, xNames[efficiencyOrfakerate.index(categ)][var.index(v)], categName, d[1], basefolderOutput+'/'+categ+'_'+v+'_'+d[0]) 
+            DrawHist(tmp, xNames[efficiencyOrfakerate.index(categ)][var.index(v)], categName, d[1], basefolderOutput+'/'+categ+'_'+v+'_'+d[0], '2016') 

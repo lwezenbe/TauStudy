@@ -3,7 +3,7 @@ import argparse
 from ROOT import TLorentzVector, TH1D
 import numpy as np
 import Sample
-from helpers import makeDirIfNeeded, progress
+from helpers_old import makeDirIfNeeded, progress
 import objectSelection as objSel
 from efficiency import efficiency
 from ROC import ROC
@@ -19,7 +19,6 @@ args = argParser.parse_args()
  
 sampleList = Sample.createSampleList('/user/lwezenbe/private/PhD/Code/TauStudy/Efficiency/Data/'+args.inputFile+'.conf') 
 sample = Sample.getSampleFromList(sampleList, args.sampleName)
-print sample.output
 Chain = sample.initTree(needhCount=False)
 
 #Define the algorithms and their working points

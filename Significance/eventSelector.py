@@ -1,6 +1,6 @@
 import ROOT
 import objectSelection as objSel
-import helpers
+import helpers_old
 from ROOT import TLorentzVector
 
 class generalEventSelector(object):
@@ -10,9 +10,9 @@ class generalEventSelector(object):
         self.nTau = 0
         
         #Old MVA working points
-        #self.IsoWorkingPoints = (Chain._lPOGVeto, Chain._lPOGLoose, Chain._lPOGMedium, Chain._lPOGTight, Chain._tauVTightMvaOld)
+        self.IsoWorkingPoints = (Chain._lPOGVeto, Chain._lPOGLoose, Chain._lPOGMedium, Chain._lPOGTight, Chain._tauPOGVTight2017v2)
         #self.IsoWorkingPoints = (Chain._tauPOGVLoose2015, Chain._tauPOGLoose2015,Chain._tauPOGMedium2015,Chain._tauPOGTight2015,Chain._tauPOGVTight2015)
-        self.IsoWorkingPoints = (Chain._deepTauVsJetsVVVLoose[lepton], Chain._deepTauVsJetsVVLoose[lepton], Chain._deepTauVsJetsVLoose[lepton], Chain._deepTauVsJetsLoose[lepton], Chain._deepTauVsJetsMedium[lepton], Chain._deepTauVsJetsTight[lepton], Chain._deepTauVsJetsVTight[lepton], Chain._deepTauVsJetsVVTight[lepton])
+        #self.IsoWorkingPoints = (Chain._deepTauVsJetsVVVLoose[lepton], Chain._deepTauVsJetsVVLoose[lepton], Chain._deepTauVsJetsVLoose[lepton], Chain._deepTauVsJetsLoose[lepton], Chain._deepTauVsJetsMedium[lepton], Chain._deepTauVsJetsTight[lepton], Chain._deepTauVsJetsVTight[lepton], Chain._deepTauVsJetsVVTight[lepton])
         
         #Electron discrimination working points
         self.ElectronWorkingPoints = (None, Chain._tauEleVetoVLoose, Chain._tauEleVetoLoose, Chain._tauEleVetoMedium, Chain._tauEleVetoTight, Chain._tauEleVetoVTight)
@@ -27,7 +27,7 @@ class generalEventSelector(object):
             lPt.append(self.Chain._lPt[l])
             lFlavor.append(self.Chain._lFlavor[l])
         
-        lFlavor = helpers.sortByOtherList(lFlavor, lPt)
+        lFlavor = helpers_old.sortByOtherList(lFlavor, lPt)
         lPt = sorted(lPt)
 
         #Look at leading lepton
@@ -105,7 +105,9 @@ class generalEventSelector(object):
         contains_B_Jet = False
         for jet in xrange(self.Chain._nJets):
             if not objSel.isCleanJet(self.Chain, jet):                                   continue
-            if self.Chain._jetCsvV2[jet]  > 0.8484:                                      contains_B_Jet = True
+            #if self.Chain._jetCsvV2[jet]  > 0.8484:                                      contains_B_Jet = True
+            if (self.Chain._jetDeepCsv_b[jet] + self.Chain._jetDeepCsv_bb[jet]) > 0.2219:   contains_B_Jet = True
+
         if contains_B_Jet:                                                               return False
         
         return True

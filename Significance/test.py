@@ -33,7 +33,7 @@ lumi = 36000
 Chain = sample.initTree()
 
 import objectSelection
-from helpers import progress
+from helpers_old import progress
 
 num = 0.
 denom = 0.

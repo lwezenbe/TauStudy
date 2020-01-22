@@ -1,7 +1,6 @@
 import ROOT
 import numpy as np
 
-lumi = 35545.499064
 
 #Parse arguments
 import argparse
@@ -15,10 +14,21 @@ argParser.add_argument('--isTest',              action='store_true',            
 
 args = argParser.parse_args()
 
+lumi = 35545.499064
+
+#if args.year == '2016':
+#    lumi = 35545.499064
+#elif args.year == '2017':
+#    lumi = 41859.4
+#else:
+#    lumi = 59970
+
+
 #Load in samples
 import Sample
 sampleList = Sample.createSampleList('/user/lwezenbe/private/PhD/Code/TauStudy/FakeRate/Data/inputFiles_'+args.year+'.conf')
 sample = Sample.getSampleFromList(sampleList, args.sampleName)
+print sample.path
 
 #Look if we're dealing with data or MC
 import eventSelection
@@ -50,12 +60,13 @@ Chain = sample.initTree()
 
 #Determine if testrun so it doesn't need to calculate the number of events in the getEventRange (current bottleneck)
 if args.isTest:
-    eventRange = sample.getEventRange(int(args.subJob))
+    #eventRange = sample.getEventRange(int(args.subJob))
+    eventRange = xrange(500)
 else:
     eventRange = sample.getEventRange(int(args.subJob))
 
 import objectSelection
-from helpers import progress, makeDirIfNeeded
+from helpers_old import progress, makeDirIfNeeded
 #Loop over events
 for entry in eventRange:
 
@@ -71,16 +82,18 @@ for entry in eventRange:
     tau_FV *= tauES.getES(Chain._tauDecayMode[tau_index])
 
     #Calculate weights    
+#    if not isData:      weightfactor = np.array([((sample.xsec*lumi)/sample.hCount) for _ in range(2)]) #numerator, denominator
     if not isData:      weightfactor = np.array([Chain._weight*((sample.xsec*lumi)/sample.hCount) for _ in range(2)]) #numerator, denominator
     else:       weightfactor = np.array([1., 1.]) #Numerator, denominator
     if forPromptSubtraction:    weightfactor *= -1. 
+
 
     if not isData:
         puWeight = puReweighting(Chain._nTrueInt)
         weightfactor *= puWeight
 
-    #    weightfactor[0] *= tauSF.getSF(args.year, 'Tight')[0]
-    #    weightfactor[1] *= tauSF.getSF(args.year, 'VLoose')[0]
+        #weightfactor[0] *= tauSF.getSF(args.year, 'Tight')[0]
+        #weightfactor[1] *= tauSF.getSF(args.year, 'VLoose')[0]
 
     #Fill Fake Rate
     #If elif structure: if measured in data and MC sample for prompt subtraction, both numerator and denominator are always filled
@@ -94,7 +107,7 @@ for entry in eventRange:
 print FR.get_numerator().GetSumOfWeights(), FR.get_denominator().GetSumOfWeights()
 print FR.get_numerator().GetEntries(), FR.get_denominator().GetEntries()
 
-#if not args.isTest:
-if True:
+if not args.isTest:
+#if True:
     FR.writeFR()
 

@@ -1,5 +1,5 @@
 import ROOT, glob, os
-from helpers import isValidRootFile
+from helpers_old import isValidRootFile
 
 basefolderInput = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Significance/Histos'
 basefolderOutput = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Significance/Merged'
@@ -20,9 +20,9 @@ for sample in samples:
             
             os.system('hadd -f ' + basefolderOutput + '/' + sample + '_singletau_'+str(ele)+'_'+str(mu)+'.root ' + basefolderInput + '/' + sample + '/*_singletau_'+str(ele)+'_'+str(mu)+'_*.root')  
             os.system('hadd -f ' + basefolderOutput + '/' + sample + '_ditau_'+str(ele)+'_'+str(mu)+'.root ' + basefolderInput + '/' + sample + '/*_ditau_'+str(ele)+'_'+str(mu)+'_*.root')  
-            for f in glob.glob(basefolderInput + '/' + sample + '/*_singletau_'+str(ele)+'_'+str(mu)+'_*.root'):
-                os.remove(f)
-            for f in glob.glob(basefolderInput + '/' + sample + '/*_ditau_'+str(ele)+'_'+str(mu)+'_*.root'):
-                os.remove(f)
+#            for f in glob.glob(basefolderInput + '/' + sample + '/*_singletau_'+str(ele)+'_'+str(mu)+'_*.root'):
+#                os.remove(f)
+#            for f in glob.glob(basefolderInput + '/' + sample + '/*_ditau_'+str(ele)+'_'+str(mu)+'_*.root'):
+#                os.remove(f)
            
     

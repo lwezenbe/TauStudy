@@ -7,11 +7,11 @@ sampleList = createSampleList('/user/lwezenbe/private/PhD/Code/TauStudy/Efficien
 
 def submitIso(sample):
 
-    if sample.name == 'WZJets':    
-        for subJob in xrange(sample.splitJobs):
-            log = "/user/lwezenbe/private/PhD/Results/TauStudy/Efficiency/log/Iso/"+sample.name+ "Eff_subjob_"+str(subJob)+".log"
-            command = 'python /storage_mnt/storage/user/lwezenbe/private/PhD/Code/TauStudy/Efficiency/IsoEfficiency.py --sample='+sample.name+ ' --subJob='+str(subJob)+ ' --method=Bluj --inputFile=inputFilesv3'
-            sub.launchCream02(command, log, True, "IsoEff")
+#    if sample.name == 'WZJets':    
+#        for subJob in xrange(sample.splitJobs):
+#            log = "/user/lwezenbe/private/PhD/Results/TauStudy/Efficiency/log/Iso/"+sample.name+ "Eff_subjob_"+str(subJob)+".log"
+#            command = 'python /storage_mnt/storage/user/lwezenbe/private/PhD/Code/TauStudy/Efficiency/IsoEfficiency.py --sample='+sample.name+ ' --subJob='+str(subJob)+ ' --method=Bluj --inputFile=inputFilesv3'
+#            sub.launchCream02(command, log, True, "IsoEff")
 
     if sample.name == 'DYJetsToLL_M-50':
         for subJob in xrange(sample.splitJobs):
@@ -50,5 +50,5 @@ def submitAllCuts(sample):
 
 for sample in sampleList:
     submitIso(sample)
-    #submitLepDiscr(sample)
-    #submitAllCuts(sample)
+#    submitLepDiscr(sample)
+#    submitAllCuts(sample)

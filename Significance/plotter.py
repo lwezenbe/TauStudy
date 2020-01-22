@@ -1,6 +1,6 @@
 import ROOT
 from plottingTools import calcAndDrawSignificance, extraTextFormat
-from helpers import makeDirIfNeeded, makePathTimeStamped, getObjFromFile
+from helpers_old import makeDirIfNeeded, makePathTimeStamped, getObjFromFile
 
 basefolderInput = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Significance/Merged'
 basefolderOutput = '/storage_mnt/storage/user/lwezenbe/private/PhD/Results/TauStudy/Significance/Plots'
@@ -86,7 +86,7 @@ for i, tn in enumerate(ntau):
                     extraText.append(extraTextFormat('m_{#chi_{2}} = '+mchi2+' GeV'))
                     
                 out_path =  basefolderOutput + '/'+hn+'_'+tn+'_'+str(ele_cut_index)+'_'+str(mu_cut_index)
-                calcAndDrawSignificance(s, background_hists[i][mu_cut_index][ele_cut_index], 'Iso working point', background_names, [hn], out_path, ylog = True, customLabels=IsoWorkingPoints, extraText=extraText) 
+                calcAndDrawSignificance(s, background_hists[i][mu_cut_index][ele_cut_index], 'Iso working point', background_names, [hn], out_path, 2016, ylog = True, customLabels=IsoWorkingPoints, extraText=extraText) 
 
 
 basefolderOutput = basefolderOutput+'/Combined'
@@ -105,7 +105,7 @@ for i, tn in enumerate(ntau):
             line_division = (6, EleWorkingPoints)
 
             out_path =  basefolderOutput + '/'+hn+'_'+tn+'_'+str(mu_cut_index)
-            calcAndDrawSignificance(s, background_hists_comb[i][mu_cut_index], 'Iso working point', background_names, [hn], out_path, ylog = True, customLabels=IsoWorkingPoints, extraText=extraText, DivideByLine=line_division)
+            calcAndDrawSignificance(s, background_hists_comb[i][mu_cut_index], 'Iso working point', background_names, [hn], out_path, 2016, ylog = True, customLabels=IsoWorkingPoints, extraText=extraText, DivideByLine=line_division)
 
 for i, tn in enumerate(ntau):
     for mu_cut_index, muname in enumerate(MuWorkingPoints):
@@ -119,4 +119,4 @@ for i, tn in enumerate(ntau):
         line_division = (6, EleWorkingPoints)
 
         out_path =  basefolderOutput + '/total_'+tn+'_'+str(mu_cut_index)
-        calcAndDrawSignificance(signal_hists_comb[i][mu_cut_index], background_hists_comb[i][mu_cut_index], 'Iso working point', background_names, signal_names, out_path, ylog = True, customLabels=IsoWorkingPoints, extraText=extraText, DivideByLine=line_division)
+        calcAndDrawSignificance(signal_hists_comb[i][mu_cut_index], background_hists_comb[i][mu_cut_index], 'Iso working point', background_names, signal_names, out_path, 2016, ylog = True, customLabels=IsoWorkingPoints, extraText=extraText, DivideByLine=line_division)
