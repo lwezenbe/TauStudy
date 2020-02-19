@@ -1,3 +1,5 @@
+Quite outdated and messy, avoid
+
 # TauStudy
 
 Code written at the start of tau studies performed for ewkino as a learning experience.
